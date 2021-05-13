@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+<!-- <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet"> -->
+
+<script src="./dist/brc-ds-eval.umd.js"></script>
+<link rel="stylesheet" type="text/css" href="./dist/brc-ds-eval.umd.css">
+
+<style>
+
+</style>
+</head>
+<body>
+<h2>BRC dataset evaluation and comparison tool</h2>
+<p>
+    If you haven't used this tool before, start on the '<i>Help</i>' tab.
+</p>
+<div id="tabbar">
+    <button class="tablink" onclick="brcdseval.openPage('help', this)" id="defaultOpen">Help</button>
+    <button class="tablink" onclick="brcdseval.openPage('load', this)">Load</button>
+    <button class="tablink" onclick="brcdseval.openPage('summary', this)">Summary</button>
+    <button class="tablink" onclick="brcdseval.openPage('maps', this)">Maps</button>
+</div>
+
+
+<div id="help" class="tabcontent">
+  <p>TODO: Introductory paragraph - outline aims and intentions.</p>
+  <p>
+    TODO: Data preparation guidelines - describe the minimum requirements of datasets that can be used
+    with this tool etc.
+  </p> 
+</div>
+
+<div id="load" class="tabcontent">
+  <h3>Dataset 1</h3>
+  <label for="csvFile">Browse for dataset 1 CSV</label>
+  <input type="file" id="csvFile1" name="csvFile1" accept=".csv" onChange="brcdseval.fileOpened(event, 1)">
+  <div id="csvLoading1">No file loaded</div>
+  <div id="field-selects">
+    <div class="field-input">
+      <label for="taxon1">Taxon:</label>
+      <select id="taxon1"></select>
+    </div>
+    <div class="field-input">
+      <label for="gr1">Grid ref:</label>
+      <select id="gr1"></select>
+    </div>
+    <div class="field-input">
+      <label for="date1">Date:</label>
+      <select id="date1"></select>
+    </div>
+    <div class="field-input">
+      <label for="recorder1">Recorder:</label>
+      <select id="recorder1"></select>
+    </div>
+    <div class="field-input">
+      <label for="verifier1">Verifier:</label>
+      <select id="verifier1"></select>
+    </div>
+    <div class="field-input">
+      <label for="verifyStatus1">Verified status:</label>
+      <select id="verifyStatus1"></select>
+    </div>
+  </div>
+  <div class='config-buttons'>
+    <button id="setFieldConfig1" onClick="brcdseval.setFieldConfig(1)">Set config</button>
+    <button id="clearFieldConfig1" onClick="brcdseval.clearFieldConfig(1)">Clear config</button>
+  </div>
+  <div id="configStatus1">No config set</div>
+
+  <h3>Dataset 2</h3>
+  <label for="csvFile">Browse for dataset 2 CSV</label>
+  <input type="file" id="csvFile2" name="csvFile2" accept=".csv" onChange="brcdseval.fileOpened(event, 2)">
+  <div id="csvLoading2">No file loaded</div>
+  <div id="field-selects">
+    <div class="field-input">
+      <label for="taxon2">Taxon:</label>
+      <select id="taxon2"></select>
+    </div>
+    <div class="field-input">
+      <label for="gr2">Grid ref:</label>
+      <select id="gr2"></select>
+    </div>
+    <div class="field-input">
+      <label for="date2">Date:</label>
+      <select id="date2"></select>
+    </div>
+    <div class="field-input">
+      <label for="recorder2">Recorder:</label>
+      <select id="recorder2"></select>
+    </div>
+    <div class="field-input">
+      <label for="verifier2">Verifier:</label>
+      <select id="verifier2"></select>
+    </div>
+    <div class="field-input">
+      <label for="verifyStatus2">Verified status:</label>
+      <select id="verifyStatus2"></select>
+    </div>
+  </div>
+  <div class='config-buttons'>
+    <button id="setFieldConfig2" onClick="brcdseval.setFieldConfig(2)">Set config</button>
+    <button id="clearFieldConfig2" onClick="brcdseval.clearFieldConfig(2)">Clear config</button>
+  </div>
+  <div id="configStatus2">No config set</div>
+</div>
+
+<div id="summary" class="tabcontent">
+  <p>TODO: conservation status, ID difficulty</p>
+  <input type="checkbox" id="summary-check-1" checked onclick="brcdseval.summaryDisplay()">
+  <label>Dataset 1</label>
+  <input type="checkbox" id="summary-check-2" onclick="brcdseval.summaryDisplay()">
+  <label>Dataset 2</label>
+  <div>
+    <div id="summary-div-1">
+      <h4 id="summary-name-1"></h4>
+      <p id="summary-message-1"></p>
+      <div id="summary-table-1"></div>
+    </div>
+    <div id="summary-div-2">
+      <h4 id="summary-name-2"></h4>
+      <p id="summary-message-2"></p>
+      <div id="summary-table-2"></div>
+    </div>
+  </div>
+</div>
+
+<div id="maps" class="tabcontent">
+  <p>TODO: Summary and interactive maps</p>
+</div>
+
+<script>
+  brcdseval.init();
+</script>
+   
+</body>
+</html> 

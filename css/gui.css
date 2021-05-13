@@ -1,0 +1,60 @@
+body, html {
+  margin: 2em;
+  font-family: Arial;
+}
+
+/* Style tab links */
+.tablink {
+  background-color: #555;
+  color: white;
+  border: none;
+  margin: 0;
+  cursor: pointer;
+  padding: 0.5em 2em; 
+  font-size: 17px;
+}
+
+#tabbar {
+    background-color: #555;
+    width: 100%;
+    display: block;
+}
+
+.tablink:hover {
+  background-color: #777;
+}
+
+.tabcontent {
+  color: black;
+  display: none;
+}
+
+#csvLoading1, #csvLoading2, #configStatus1, #configStatus2 {
+  font-weight: bold;
+  color: red;
+}
+
+.config-buttons {
+  margin: 0.5em 0
+}
+
+.field-input label {
+  width: 130px;
+  display: inline-block;
+}
+
+.field-input  {
+  margin-top: 0.5em;
+} 
+
+.warning-message {
+  font-weight: bold;
+  color: red;
+  display: none;
+}
+
+.split {
+  float: left;
+  width: 48%;
+  margin: 0 1%;
+}
