@@ -20,7 +20,7 @@ export function setFieldConfig(i) {
   data[i-1].fields = {}
   configFields.forEach(f => setValue(f))
 
-  d3.selectAll('.field-input select').property('disabled', true)
+  d3.selectAll(`#field-selects-${i} select`).property('disabled', true)
   d3.select(`#setFieldConfig${i}`).property('disabled', true)
   d3.select(`#clearFieldConfig${i}`).property('disabled', false)
   d3.select(`#configStatus${i}`).html('Config is set')
@@ -32,7 +32,7 @@ export function setFieldConfig(i) {
 export function clearFieldConfig(i) {
   data[i-1].fields = null
 
-  d3.selectAll('.field-input select').property('disabled', false)
+  d3.selectAll(`#field-selects-${i} select`).property('disabled', false)
   d3.select(`#setFieldConfig${i}`).property('disabled', false)
   d3.select(`#clearFieldConfig${i}`).property('disabled', true)
   d3.select(`#configStatus${i}`).html('No config set')

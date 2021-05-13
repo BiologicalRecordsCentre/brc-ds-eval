@@ -1490,7 +1490,7 @@
     configFields.forEach(function (f) {
       return setValue(f);
     });
-    d3__namespace.selectAll('.field-input select').property('disabled', true);
+    d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', true);
     d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', true);
     d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', false);
     d3__namespace.select("#configStatus".concat(i)).html('Config is set');
@@ -1499,7 +1499,7 @@
   }
   function clearFieldConfig(i) {
     data[i - 1].fields = null;
-    d3__namespace.selectAll('.field-input select').property('disabled', false);
+    d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', false);
     d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', false);
     d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', true);
     d3__namespace.select("#configStatus".concat(i)).html('No config set');
