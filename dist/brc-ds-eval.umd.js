@@ -1368,7 +1368,7 @@
 
           if (data.fields.tvk) {
             if (!d[data.fields.tvk]) {
-              designation = "no TVK";
+              designation = "no tvk";
             } else if (window.taxonDesignations[d[data.fields.tvk]]) {
               designation = window.taxonDesignations[d[data.fields.tvk]];
             }
@@ -1526,7 +1526,7 @@
   var configFields = ['taxon', 'tvk', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus', 'source']; // Load the JNCC taxon designations CSV - convert it to a simple object
   // mapping tvk to desgination.
 
-  d3__namespace.csv('../data/designations.csv', function (d) {
+  d3__namespace.csv('/dist/designations.csv', function (d) {
     if (d['Reporting category'] === 'Nationally Scarce, Nationally Rare and Other Species') {
       return {
         tvk: d['Recommended taxon version'],
