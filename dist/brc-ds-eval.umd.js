@@ -1345,23 +1345,39 @@
   unique:function unique(cell,value,parameters){if(value===""||value===null||typeof value==="undefined"){return true;}var unique=true;var cellData=cell.getData();var column=cell.getColumn()._getSelf();this.table.rowManager.rows.forEach(function(row){var data=row.getData();if(data!==cellData){if(value==column.getFieldValue(data)){unique=false;}}});return unique;},//must have a value
   required:function required(cell,value,parameters){return value!==""&&value!==null&&typeof value!=="undefined";}};Tabulator.prototype.registerModule("validate",Validate);
 
+  var dataraw;
   var summary = [{}, {}];
 
-  function summarise(data, i) {
+  function summarise(i) {
+    var data = dataraw[i - 1];
+
     if (!data.fields.taxon) {
       d3__namespace.select("#summary-message-".concat(i)).html("\n        For the summary table, you must configure the <i>Taxon</i> column as a minimum.\n        Configuring the <i>Date</i> column will also give richer output.\n      ");
       d3__namespace.select("#summary-message-".concat(i)).style('display', '');
     } else {
       d3__namespace.select("#summary-message-".concat(i)).style('display', 'none');
+      var groupCol = d3__namespace.select('input[name=rad-grouping]:checked').property('value');
       var sumData = {};
       data.json.forEach(function (d) {
-        var taxon = d[data.fields.taxon]; // Count the record agains the appropriate taxon
+        var rowKey = groupCol && data.fields[groupCol] ? "".concat(d[data.fields.taxon], "-").concat(d[data.fields[groupCol]]) : d[data.fields.taxon]; // Count the record against the appropriate taxon
 
-        if (sumData[taxon]) {
-          sumData[taxon].records++;
+        if (sumData[rowKey]) {
+          sumData[rowKey].records++;
         } else {
-          sumData[taxon] = {
-            taxon: taxon,
+          var designation = '';
+
+          if (data.fields.tvk) {
+            if (!d[data.fields.tvk]) {
+              designation = "no TVK";
+            } else if (window.taxonDesignations[d[data.fields.tvk]]) {
+              designation = window.taxonDesignations[d[data.fields.tvk]];
+            }
+          }
+
+          sumData[rowKey] = {
+            taxon: d[data.fields.taxon],
+            designation: designation,
+            grouping: groupCol && data.fields[groupCol] ? d[data.fields[groupCol]] : '',
             records: 1
           };
         } // Date
@@ -1379,20 +1395,20 @@
               year = Number(date.substr(6, 4));
             }
 
-            if (sumData[taxon].minYear) {
-              if (year < sumData[taxon].minYear) {
-                sumData[taxon].minYear = year;
+            if (sumData[rowKey].minYear) {
+              if (year < sumData[rowKey].minYear) {
+                sumData[rowKey].minYear = year;
               }
             } else {
-              sumData[taxon].minYear = year;
+              sumData[rowKey].minYear = year;
             }
 
-            if (sumData[taxon].maxYear) {
-              if (year > sumData[taxon].maxYear) {
-                sumData[taxon].maxYear = year;
+            if (sumData[rowKey].maxYear) {
+              if (year > sumData[rowKey].maxYear) {
+                sumData[rowKey].maxYear = year;
               }
             } else {
-              sumData[taxon].maxYear = year;
+              sumData[rowKey].maxYear = year;
             }
           }
         }
@@ -1400,13 +1416,34 @@
       var sumArray = Object.keys(sumData).map(function (k) {
         return sumData[k];
       });
-      var cols = [{
+      var cols = [];
+
+      if (groupCol && data.fields[groupCol]) {
+        cols.push({
+          title: data.fields[groupCol],
+          field: "grouping",
+          headerFilter: "input"
+        });
+      }
+
+      cols.push({
         title: "Taxon",
-        field: "taxon"
-      }, {
+        field: "taxon",
+        headerFilter: "input"
+      });
+
+      if (data.fields.tvk) {
+        cols.push({
+          title: "Designation",
+          field: "designation",
+          headerFilter: "input"
+        });
+      }
+
+      cols.push({
         title: "Records",
         field: "records"
-      }];
+      });
 
       if (data.fields.date) {
         cols.push({
@@ -1419,14 +1456,39 @@
         });
       }
 
+      console.log('cols', cols);
+      console.log('sumArray', sumArray);
       return new Tabulator("#summary-table-".concat(i), {
         height: 600,
         data: sumArray,
-        columns: cols
+        columns: cols,
+        groupBy: groupCol ? "grouping" : ""
       });
     }
   }
 
+  function summariesTables() {
+    // Generate summary data for each table
+    var generate = function generate(i) {
+      if (!summary[i - 1].table && dataraw[i - 1].json && dataraw[i - 1].fields) {
+        d3__namespace.select("#summary-name-".concat(i)).text(dataraw[i - 1].name);
+        summary[i - 1].table = summarise(i);
+      }
+    };
+
+    generate(1);
+    generate(2);
+  }
+
+  function redoSummaries() {
+    clear(1);
+    clear(2);
+    summariesTables();
+  }
+  function tabSelected(data) {
+    dataraw = data;
+    summariesTables();
+  }
   function clear(i) {
     if (summary[i - 1].table) {
       summary[i - 1].table.destroy();
@@ -1434,18 +1496,8 @@
       d3__namespace.select("#summary-table-".concat(i)).html('');
     }
   }
-  function tabSelected(data) {
-    var generate = function generate(i) {
-      if (!summary[i - 1].table && data[i - 1].json && data[i - 1].fields) {
-        d3__namespace.select("#summary-name-".concat(i)).text(data[i - 1].name);
-        summary[i - 1].table = summarise(data[i - 1], i);
-      }
-    };
-
-    generate(1);
-    generate(2);
-  }
   function summaryDisplay() {
+    // Function responsible for display one or both tables
     var d1 = d3__namespace.select('#summary-check-1').property("checked");
     var d2 = d3__namespace.select('#summary-check-2').property("checked");
 
@@ -1468,12 +1520,30 @@
     } else {
       d3__namespace.select('#summary-div-2').style("display", "none");
     }
-
-    console.log(d1, d2);
   }
 
   var data = [{}, {}];
-  var configFields = ['taxon', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus'];
+  var configFields = ['taxon', 'tvk', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus', 'source']; // Load the JNCC taxon designations CSV - convert it to a simple object
+  // mapping tvk to desgination.
+
+  d3__namespace.csv('../data/designations.csv', function (d) {
+    if (d['Reporting category'] === 'Nationally Scarce, Nationally Rare and Other Species') {
+      return {
+        tvk: d['Recommended taxon version'],
+        designation: d['Designation']
+      };
+    }
+  }).then(function (data) {
+    window.taxonDesignations = data.reduce(function (a, d) {
+      a[d.tvk] = d.designation;
+      return a;
+    }, {});
+    d3__namespace.select('#jnccLoading').text('loaded').style('color', 'blue');
+  })["catch"](function (error) {
+    // handle error  
+    console.log(error);
+    d3__namespace.select('#jnccLoading').text('failed to load').style('color', 'red');
+  });
   function init() {
     document.getElementById("defaultOpen").click();
   }
@@ -1507,6 +1577,8 @@
     clear(i);
   }
   function openPage(pageName, tabLink) {
+    // Sort out style on the tablink buttons and display
+    // the page content associated with the selected tab
     d3__namespace.selectAll(".tabcontent").style("display", "none");
     d3__namespace.select("#".concat(pageName)).style("display", "block");
     d3__namespace.selectAll(".tablink").style("background-color", "");
@@ -1637,6 +1709,7 @@
   exports.fileOpened = fileOpened;
   exports.init = init;
   exports.openPage = openPage;
+  exports.redoSummaries = redoSummaries;
   exports.setFieldConfig = setFieldConfig;
   exports.summaryDisplay = summaryDisplay;
 

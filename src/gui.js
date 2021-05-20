@@ -2,7 +2,29 @@ import * as d3 from 'd3'
 import * as summary from './summary'
 
 let data = [{}, {}]
-let configFields = ['taxon', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus' ]
+let configFields = ['taxon', 'tvk', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus', 'source' ]
+
+// Load the JNCC taxon designations CSV - convert it to a simple object
+// mapping tvk to desgination.
+d3.csv('../data/designations.csv', function(d) {
+    if (d['Reporting category']==='Nationally Scarce, Nationally Rare and Other Species') {
+      return {
+        tvk: d['Recommended taxon version'],
+        designation: d['Designation']
+      }
+    }
+  }).then(function(data) {
+    window.taxonDesignations = data.reduce((a, d) => {
+      a[d.tvk] = d.designation
+      return a
+    }, {})
+    d3.select('#jnccLoading').text('loaded').style('color','blue')
+  })
+  .catch(function(error){
+     // handle error  
+    console.log(error) 
+    d3.select('#jnccLoading').text('failed to load').style('color', 'red')
+  })
 
 export function init() {
   document.getElementById("defaultOpen").click()
@@ -43,6 +65,8 @@ export function clearFieldConfig(i) {
 
 export function openPage(pageName,tabLink) {
 
+  // Sort out style on the tablink buttons and display
+  // the page content associated with the selected tab
   d3.selectAll(".tabcontent").style("display", "none")
   d3.select(`#${pageName}`).style("display", "block")
   d3.selectAll(".tablink").style("background-color", "")

@@ -1,9 +1,11 @@
 import * as d3 from 'd3'
 import Tabulator from 'tabulator-tables'
 
+let dataraw
 let summary = [{}, {}]
 
-function summarise(data, i) {
+function summarise(i) {
+  const data = dataraw[i-1]
 
   if (!data.fields.taxon) {
     d3.select(`#summary-message-${i}`)
@@ -15,16 +17,29 @@ function summarise(data, i) {
   } else {
     d3.select(`#summary-message-${i}`).style('display', 'none')
 
+    const groupCol = d3.select('input[name=rad-grouping]:checked').property('value')
     const sumData = {}
     data.json.forEach(d => {
 
-      const taxon = d[data.fields.taxon]
-      // Count the record agains the appropriate taxon
-      if (sumData[taxon]) {
-        sumData[taxon].records++
+      const rowKey = groupCol && data.fields[groupCol] ? `${d[data.fields.taxon]}-${d[data.fields[groupCol]]}` : d[data.fields.taxon]
+   
+      // Count the record against the appropriate taxon
+      if (sumData[rowKey]) {
+        sumData[rowKey].records++
       } else {
-        sumData[taxon] = {
-          taxon: taxon,
+        let designation = ''
+        if (data.fields.tvk) {
+          if (!d[data.fields.tvk]) {
+            designation = "no tvk"
+          } else if (window.taxonDesignations[d[data.fields.tvk]]){
+            designation = window.taxonDesignations[d[data.fields.tvk]]
+          }
+        }
+
+        sumData[rowKey] = {
+          taxon: d[data.fields.taxon],
+          designation: designation,
+          grouping: groupCol && data.fields[groupCol] ? d[data.fields[groupCol]] : '',
           records: 1
         }
       }
@@ -41,41 +56,75 @@ function summarise(data, i) {
           } else {
             year = Number(date.substr(6,4))
           }
-          if (sumData[taxon].minYear) {
-            if (year < sumData[taxon].minYear) {
-              sumData[taxon].minYear = year
+          if (sumData[rowKey].minYear) {
+            if (year < sumData[rowKey].minYear) {
+              sumData[rowKey].minYear = year
             }
           } else {
-            sumData[taxon].minYear = year
+            sumData[rowKey].minYear = year
           }
-          if (sumData[taxon].maxYear) {
-            if (year > sumData[taxon].maxYear) {
-              sumData[taxon].maxYear = year
+          if (sumData[rowKey].maxYear) {
+            if (year > sumData[rowKey].maxYear) {
+              sumData[rowKey].maxYear = year
             }
           } else {
-            sumData[taxon].maxYear = year
+            sumData[rowKey].maxYear = year
           }
         } else {
+          // Date not parsed - this not yet reported to user
           badDate++
         }
       }
     })
     const sumArray = Object.keys(sumData).map(k => sumData[k])
 
-    const cols = [
-      {title:"Taxon", field:"taxon"},
-      {title:"Records", field:"records"}
-    ]
+    const cols = []
+    if (groupCol && data.fields[groupCol]) {
+      cols.push({title: data.fields[groupCol], field:"grouping",  headerFilter:"input"})
+    }
+    cols.push({title:"Taxon", field:"taxon",  headerFilter:"input"})
+    if (data.fields.tvk) {
+      cols.push({title: "Designation", field:"designation",  headerFilter:"input"})
+    }
+    cols.push({title:"Records", field:"records"})
     if (data.fields.date) {
       cols.push({title:"MinYear", field:"minYear"})
       cols.push({title:"MaxYear", field:"maxYear"})
     }
+
+    console.log('cols', cols)
+    console.log('sumArray', sumArray)
+
     return new Tabulator(`#summary-table-${i}`, {
       height: 600,
       data: sumArray,
-      columns:cols
+      columns: cols,
+      groupBy: groupCol ? "grouping" : ""
     })
   }
+}
+
+function summariesTables() {
+  // Generate summary data for each table
+  const generate = (i) => {
+    if (!summary[i-1].table && dataraw[i-1].json && dataraw[i-1].fields ) {
+      d3.select(`#summary-name-${i}`).text(dataraw[i-1].name)
+      summary[i-1].table = summarise(i)
+    }
+  }
+  generate(1)
+  generate(2)
+}
+
+export function redoSummaries() {
+  clear(1)
+  clear(2)
+  summariesTables()
+}
+
+export function tabSelected(data) {
+  dataraw = data
+  summariesTables()
 }
 
 export function clear(i) {
@@ -86,18 +135,8 @@ export function clear(i) {
   }
 }
 
-export function tabSelected(data) {
-  const generate = (i) => {
-    if (!summary[i-1].table && data[i-1].json && data[i-1].fields ) {
-      d3.select(`#summary-name-${i}`).text(data[i-1].name)
-      summary[i-1].table = summarise(data[i-1], i)
-    }
-  }
-  generate(1)
-  generate(2)
-}
-
 export function summaryDisplay() {
+  // Function responsible for display one or both tables
   const d1 = d3.select('#summary-check-1').property("checked")
   const d2 = d3.select('#summary-check-2').property("checked")
 
@@ -118,5 +157,4 @@ export function summaryDisplay() {
   } else {
     d3.select('#summary-div-2').style("display", "none")
   }
-  console.log(d1, d2)
 }

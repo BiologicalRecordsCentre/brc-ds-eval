@@ -1,5 +1,5 @@
 import { openPage, init, fileOpened, setFieldConfig, clearFieldConfig } from './src/gui'
-import { summaryDisplay } from './src/summary'
+import { summaryDisplay, redoSummaries } from './src/summary'
 import pkg from './package.json'
 
 // Output version from package json to console
@@ -12,5 +12,6 @@ export {
   fileOpened,
   setFieldConfig,
   clearFieldConfig,
-  summaryDisplay
+  summaryDisplay,
+  redoSummaries
 } 
