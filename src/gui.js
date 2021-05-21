@@ -1,5 +1,7 @@
 import * as d3 from 'd3'
+import { checkGr } from 'brc-atlas-bigr'
 import * as summary from './summary'
+import * as mapoverview from './mapoverview'
 
 let data = [{}, {}]
 let configFields = ['taxon', 'tvk', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus', 'source' ]
@@ -48,7 +50,40 @@ export function setFieldConfig(i) {
   d3.select(`#configStatus${i}`).html('Config is set')
   d3.select(`#configStatus${i}`).style('color', 'blue')
 
-  console.log(data)
+  // Dataset stats for the configured fields
+  configFields.forEach(cf => {
+    const fcsv = data[i-1].fields[cf]
+    if (fcsv) {
+      const unique = [...new Set(data[i-1].json.filter(r => r[fcsv] !== '').map(r => r[fcsv]))]
+      const missing = data[i-1].json.filter(r => r[fcsv] === '')
+      let invalid
+      if (cf === 'gr') {
+        invalid = data[i-1].json.filter(r => {
+          if (!r[fcsv]) return false // Missing values not counted as invalid
+          try {
+            checkGr(r[fcsv])
+          }
+          catch(err) {
+            return true
+          }
+          return false
+        })
+      } else if (cf === 'date') {
+        invalid = data[i-1].json.filter(r => {
+          if (!r[fcsv]) return false // Missing values not counted as invalid
+          return !(/^\d\d\d\d.\d\d.\d\d$/.test(r[fcsv]) || /^\d\d.\d\d.\d\d\d\d$/.test(r[fcsv])) 
+        })
+      }
+
+      if (cf === 'date' || cf ==='gr') {
+        d3.select(`#${cf}Info${i}`).text(`Invalid: ${invalid.length}, Missing: ${missing.length}`)
+      } else {
+        d3.select(`#${cf}Info${i}`).text(`Unique: ${unique.length}, Missing: ${missing.length}`)
+      }
+    } else {
+      d3.select(`#${cf}Info${i}`).text('')
+    }
+  })
 }
 
 export function clearFieldConfig(i) {
@@ -61,6 +96,7 @@ export function clearFieldConfig(i) {
   d3.select(`#configStatus${i}`).style('color', 'red')
 
   summary.clear(i)
+  mapoverview.clear(i)
 }
 
 export function openPage(pageName,tabLink) {
@@ -75,10 +111,13 @@ export function openPage(pageName,tabLink) {
   if (pageName === 'summary') {
     summary.tabSelected(data)
   }
+
+  if (pageName === 'mapoverview') {
+    mapoverview.tabSelected(data)
+  }
 }
 
 export function fileOpened(event, i) {
-
   if (event.target.files[0] !== undefined) {
 
     d3.select(`#csvLoading${i}`).html('Loading file...')
@@ -89,10 +128,11 @@ export function fileOpened(event, i) {
       d3.csv(event.target.result)
         .then(function(json) {
           //console.log(json)
-          d3.select(`#csvLoading${i}`).html('File loaded')
+          d3.select(`#csvLoading${i}`).html(`File loaded - ${json.length} records`)
           d3.select(`#csvLoading${i}`).style('color', 'blue')
           data[i-1].json = json
           setFieldDropdowns(i)
+          d3.select(`#setFieldConfig${i}`).property('disabled', false)
         })
     })
     reader.readAsDataURL(event.target.files[0])
@@ -101,6 +141,7 @@ export function fileOpened(event, i) {
     clearDataset(i)
   }
   clearFieldConfig(i)
+  d3.select(`#setFieldConfig${i}`).property('disabled', true)
 }
 
 function clearDataset(i) {
@@ -118,6 +159,7 @@ function setFieldDropdowns(i){
 
   // Clear existing
   configFields.forEach(cf => d3.select(`#${cf}${i}`).html(''))
+  configFields.forEach(cf => d3.select(`#${cf}Info${i}`).text(''))
 
   if (data[i-1].json) {
     const fields = ['', ...Object.keys(data[i-1].json[0])]

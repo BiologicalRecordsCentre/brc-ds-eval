@@ -64,3 +64,13 @@ body, html {
   margin: 0 1%;
 }
 
+.split2 {
+  float: left;
+  margin-right: 2em;
+}
+
+.input-info {
+  display: inline-block;
+  font-size: 0.8em;
+}
+

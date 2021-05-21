@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import Tabulator from 'tabulator-tables'
 
 let dataraw
-let summary = [{}, {}]
+let summary = [null, null]
 
 function summarise(i) {
   const data = dataraw[i-1]
@@ -107,9 +107,11 @@ function summarise(i) {
 function summariesTables() {
   // Generate summary data for each table
   const generate = (i) => {
-    if (!summary[i-1].table && dataraw[i-1].json && dataraw[i-1].fields ) {
+    if (!summary[i-1] && dataraw[i-1].json && dataraw[i-1].fields ) {
       d3.select(`#summary-name-${i}`).text(dataraw[i-1].name)
-      summary[i-1].table = summarise(i)
+      summary[i-1] = summarise(i)
+    } else if (summary[i-1]) {
+      summary[i-1].redraw(true)
     }
   }
   generate(1)
@@ -128,9 +130,9 @@ export function tabSelected(data) {
 }
 
 export function clear(i) {
-  if (summary[i-1].table) {
-    summary[i-1].table.destroy()
-    summary[i-1].table = null
+  if (summary[i-1]) {
+    summary[i-1].destroy()
+    summary[i-1] = null
     d3.select(`#summary-table-${i}`).html('')
   }
 }
@@ -157,4 +159,6 @@ export function summaryDisplay() {
   } else {
     d3.select('#summary-div-2').style("display", "none")
   }
+  if (summary[0]) summary[0].redraw(true)
+  if (summary[1]) summary[1].redraw(true)
 }

@@ -1,5 +1,6 @@
 import { openPage, init, fileOpened, setFieldConfig, clearFieldConfig } from './src/gui'
-import { summaryDisplay, redoSummaries } from './src/summary'
+import { summaryDisplay, redoSummaries,  } from './src/summary'
+import { mapoverviewDisplay, mapoverviewMap, mapoverviewClearMap } from './src/mapoverview'
 import pkg from './package.json'
 
 // Output version from package json to console
@@ -13,5 +14,8 @@ export {
   setFieldConfig,
   clearFieldConfig,
   summaryDisplay,
-  redoSummaries
+  redoSummaries,
+  mapoverviewDisplay,
+  mapoverviewMap,
+  mapoverviewClearMap
 } 
