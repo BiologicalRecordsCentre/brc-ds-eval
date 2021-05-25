@@ -52,10 +52,10 @@ export function gui(sel) {
     input.attr('onChange', `brcdseval.fileOpened(event, ${i})`)
     input.style('margin-left', '0.5em')
     d2.append('div').attr('id', `csvLoading${i}`).style('margin-top', '0.5em').text('No file loaded')
-    d2.append('div').attr('id', `field-selects-${i}`)
+    const d2a = d2.append('div').attr('id', `field-selects-${i}`)
 
     gen.configFields.forEach(f => {
-      const d3 = d2.append('div')
+      const d3 = d2a.append('div')
       d3.classed('field-input', true)
       const label = d3.append('label')
       label.attr('for', `${f.id}${i}`)
@@ -171,7 +171,7 @@ export function setFieldConfig(i) {
       } else if (cf.id === 'date') {
         invalid = gen.data[i-1].json.filter(r => {
           if (!r[fcsv]) return false // Missing values not counted as invalid
-          return !(/^\d\d\d\d.\d\d.\d\d$/.test(r[fcsv]) || /^\d\d.\d\d.\d\d\d\d$/.test(r[fcsv])) 
+          return !gen.dateValid(r[fcsv])
         })
       }
 

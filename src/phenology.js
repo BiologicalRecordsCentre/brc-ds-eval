@@ -1,6 +1,9 @@
 import * as d3 from 'd3'
 import * as gen from './gen'
 
+const phenData = [null, null]
+
+// Standard interface functions
 export function gui(sel) {
   
   gen.datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay')
@@ -18,32 +21,62 @@ export function gui(sel) {
   tableDiv(1)
   tableDiv(2)
 
-  d3.select('#phenology-div-1').text('phenology chart 1')
-  d3.select('#phenology-div-2').text('phenology chart 2')
+  //d3.select('#phenology-div-1').text('phenology chart 1')
+  //d3.select('#phenology-div-2').text('phenology chart 2')
 
   //const d1 = d3.select(sel).append('div')
 }
 
 export function tabSelected() {
-
-  // const phenData = [null, null]
   
-  // for (let i=0; i<=2; i++) {
+  for (let i=0; i<2; i++) {
+    
+    // Warn if data selected but the necessary config is not set
+    if (gen.data[i] && gen.data[i].fields && (!gen.data[i].fields.taxon  || !gen.data[i].fields.date)) {
+      d3.select(`#phenology-message-${i+1}`).html(`
+        To see phenology charts, both <i>taxon</i> and <i>date</i> fields must be configured.
+      `)
+    } else {
+      d3.select(`#phenology-message-${i+1}`).html('blah')
+    }
 
-  //   if (gen.data[i] && gen.data[i].fields && gen.data[i].fields.taxon) {
-  //     gen.data[i].json
-  //   }
-  // }
+    // Generate penology data if not already exists and all the necessary config is set
+    if (!phenData[i] && gen.data[i] && gen.data[i].fields && gen.data[i].fields.taxon  && gen.data[i].fields.taxon) {
+      phenData[i] = []
+      gen.data[i].json.forEach(r => {
+        const date = r[gen.data[i].fields.date]
+        const taxon = r[gen.data[i].fields.taxon]
+        if (date && taxon && gen.dateValid(date)) {
+          const week = gen.dateWeek(date)
+          const pd = phenData[i].find(pd => pd.taxon === taxon && pd.week === week)
+          if (pd) {
+            pd.count = pd.count + 1
+          } else {
+            phenData[i].push({
+              taxon: taxon,
+              week: week,
+              count: 1
+            })
+          }
+        }
+      })
+
+      console.log("phen data", phenData[i])
+    }
+  }
 }
 
 export function dataCleared(i) {
+  clear(i)
 }
 
 export function fieldConfigCleared(i) {
+  clear(i)
 }
 
+// Exported from the library to use from html interface
 export function phenologyDisplay() {
-  // Function responsible for display one or both tables
+  // Function responsible for display one or both charts
   const d1 = d3.select('#phenology-check-1').property("checked")
   const d2 = d3.select('#phenology-check-2').property("checked")
 
@@ -64,4 +97,9 @@ export function phenologyDisplay() {
   } else {
     d3.select('#phenology-div-2').style("display", "none")
   }
+}
+
+// Helper functions
+function clear(i) {
+  phenData[i-1] = null
 }

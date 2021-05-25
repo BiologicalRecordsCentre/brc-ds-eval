@@ -3,8 +3,9 @@ import * as gen from './gen'
 import { getLowerResGrs, checkGr } from 'brc-atlas-bigr'
 //import bigr from 'brc-atlas-bigr'
 
-let dataraw, maps = [null, null], taxa = [null, null]
+let maps = [null, null], taxa = [null, null]
 
+// Standard interface functions
 export function gui(sel) {
 
   function makeMapDiv(i) {
@@ -32,11 +33,9 @@ export function gui(sel) {
 
 export function tabSelected() {
 
-  dataraw = gen.data
-
   const checkMap = (i) => {
 
-    if (dataraw[i-1].fields && (!dataraw[i-1].fields.gr || !dataraw[i-1].fields.taxon)) {
+    if (gen.data[i-1].fields && (!gen.data[i-1].fields.gr || !gen.data[i-1].fields.taxon)) {
       d3.select(`#overviewmap-message-${i}`)
         .html(`
           For the overview map, you must configure both the <i>Taxon</i> and <i>Grid ref</i> columns.
@@ -45,7 +44,7 @@ export function tabSelected() {
     } else {
       d3.select(`#overviewmap-message-${i}`).style('display', 'none')
 
-      if (!maps[i-1] && dataraw[i-1].json && dataraw[i-1].fields) {
+      if (!maps[i-1] && gen.data[i-1].json && gen.data[i-1].fields) {
         // Create brc-atlas map object
         maps[i-1] = window.brcatlas.svgMap({
           selector: `#overviewmap-container-${i}`,
@@ -58,9 +57,9 @@ export function tabSelected() {
         })
 
         // Create taxon selection list
-        const tf = dataraw[i-1].fields.taxon
+        const tf = gen.data[i-1].fields.taxon
         taxa[i-1] = []
-        dataraw[i-1].json.forEach(r => {
+        gen.data[i-1].json.forEach(r => {
           if (taxa[i-1].indexOf(r[tf]) === -1) {
             taxa[i-1].push(r[tf])
           }
@@ -70,7 +69,7 @@ export function tabSelected() {
         })
       }
       d3.select(`#overviewmap-div-${i}`).style("display", maps[i-1] ? "" : "none")
-      d3.select(`#overviewmap-name-${i}`).text(dataraw[i-1].name)
+      d3.select(`#overviewmap-name-${i}`).text(gen.data[i-1].name)
       console.log('taxa',taxa)
     }
   }
@@ -79,53 +78,14 @@ export function tabSelected() {
 }
 
 export function dataCleared(i) {
-  //maps[i-1].clearMap()
+  clear(i)
 }
 
 export function fieldConfigCleared(i) {
-  //maps[i-1].clearMap()
+  clear(i)
 }
 
-function genHecatdMap(props) {
-
-  const i = props.i
-  const taxon = props.taxon
-  const fgr = dataraw[i-1].fields.gr
-  const ft = dataraw[i-1].fields.taxon
-
-  let hectads = []
-  dataraw[i-1].json.forEach(r => {
-    let grcheck
-    try {
-      grcheck = checkGr(r[fgr])
-    }
-    catch(err) {
-      grcheck = null
-    }
-    if (grcheck && grcheck.precision <= 10000) {
-      const hectad = getLowerResGrs(r[fgr]).p10000
-      if (r[ft] === taxon) {
-        if (hectads.indexOf(hectad) === -1) {
-          hectads.push(hectad)
-        }
-      }
-    }
-  })
-  const data = hectads.map(h => {
-    return {gr: h, colour: 'black'}
-  })
-
-  return new Promise((resolve) => {
-    resolve({
-      records: data,
-      precision: 10000,
-      shape: 'circle',
-      opacity: 1,
-      size: 1
-    })
-  })
-}
-
+// Exported from the library to use from html interface
 export function mapoverviewMap(i) {
   const taxon = d3.select(`#overviewmap-taxon-${i}`).property('value')
   maps[i-1].setIdentfier({i: i, taxon: taxon})
@@ -158,4 +118,45 @@ export function mapoverviewDisplay() {
   } else {
     d3.select('#overviewmap-div-2').style("display", "none")
   }
+}
+
+// Helper functions
+function genHecatdMap(props) {
+
+  const i = props.i
+  const taxon = props.taxon
+  const fgr = gen.data[i-1].fields.gr
+  const ft = gen.data[i-1].fields.taxon
+
+  let hectads = []
+  gen.data[i-1].json.forEach(r => {
+    let grcheck
+    try {
+      grcheck = checkGr(r[fgr])
+    }
+    catch(err) {
+      grcheck = null
+    }
+    if (grcheck && grcheck.precision <= 10000) {
+      const hectad = getLowerResGrs(r[fgr]).p10000
+      if (r[ft] === taxon) {
+        if (hectads.indexOf(hectad) === -1) {
+          hectads.push(hectad)
+        }
+      }
+    }
+  })
+  const data = hectads.map(h => {
+    return {gr: h, colour: 'black'}
+  })
+
+  return new Promise((resolve) => {
+    resolve({
+      records: data,
+      precision: 10000,
+      shape: 'circle',
+      opacity: 1,
+      size: 1
+    })
+  })
 }

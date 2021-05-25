@@ -2,9 +2,9 @@ import * as d3 from 'd3'
 import * as gen from './gen'
 import Tabulator from 'tabulator-tables'
 
-let dataraw
 let summary = [null, null]
 
+// Standard interface functions
 export function gui(sel) {
   
   // Dataset checkboxes
@@ -49,7 +49,6 @@ export function gui(sel) {
 }
 
 export function tabSelected() {
-  dataraw = gen.data
   summariesTables()
 }
 
@@ -61,8 +60,42 @@ export function fieldConfigCleared(i) {
   clear(i)
 }
 
+// Exported from the library to use from html interface
+export function redoSummaries() {
+  clear(1)
+  clear(2)
+  summariesTables()
+}
+
+export function summaryDisplay() {
+  // Function responsible for display one or both tables
+  const d1 = d3.select('#summary-check-1').property("checked")
+  const d2 = d3.select('#summary-check-2').property("checked")
+
+  if (d1 && d2) {
+    d3.select('#summary-div-1').classed("split", true)
+    d3.select('#summary-div-2').classed("split", true)
+  } else {
+    d3.select('#summary-div-1').classed("split", false)
+    d3.select('#summary-div-2').classed("split", false)
+  }
+  if (d1) {
+    d3.select('#summary-div-1').style("display", "")
+  } else {
+    d3.select('#summary-div-1').style("display", "none")
+  }
+  if (d2) {
+    d3.select('#summary-div-2').style("display", "")
+  } else {
+    d3.select('#summary-div-2').style("display", "none")
+  }
+  if (summary[0]) summary[0].redraw(true)
+  if (summary[1]) summary[1].redraw(true)
+}
+
+// Helper functions
 function summarise(i) {
-  const data = dataraw[i-1]
+  const data = gen.data[i-1]
 
   if (!data.fields.taxon) {
     d3.select(`#summary-message-${i}`)
@@ -106,13 +139,9 @@ function summarise(i) {
       if (data.fields.date) {
         const date = d[data.fields.date]
         let year
-        let badDate = 0
-        if (/^\d\d\d\d.\d\d.\d\d$/.test(date) || /^\d\d.\d\d.\d\d\d\d$/.test(date)) {
-          if (/^\d\d\d\d.\d\d.\d\d$/.test(date)) {
-            year = Number(date.substr(0,4))
-          } else {
-            year = Number(date.substr(6,4))
-          }
+        if (gen.dateValid(date)) {
+          year = gen.dateYear(date)
+
           if (sumData[rowKey].minYear) {
             if (year < sumData[rowKey].minYear) {
               sumData[rowKey].minYear = year
@@ -127,9 +156,6 @@ function summarise(i) {
           } else {
             sumData[rowKey].maxYear = year
           }
-        } else {
-          // Date not parsed - this not yet reported to user
-          badDate++
         }
       }
     })
@@ -164,8 +190,8 @@ function summarise(i) {
 function summariesTables() {
   // Generate summary data for each table
   const generate = (i) => {
-    if (!summary[i-1] && dataraw[i-1].json && dataraw[i-1].fields ) {
-      d3.select(`#summary-name-${i}`).text(dataraw[i-1].name)
+    if (!summary[i-1] && gen.data[i-1].json && gen.data[i-1].fields ) {
+      d3.select(`#summary-name-${i}`).text(gen.data[i-1].name)
       summary[i-1] = summarise(i)
     } else if (summary[i-1]) {
       summary[i-1].redraw(true)
@@ -173,12 +199,6 @@ function summariesTables() {
   }
   generate(1)
   generate(2)
-}
-
-export function redoSummaries() {
-  clear(1)
-  clear(2)
-  summariesTables()
 }
 
 function clear(i) {
@@ -189,29 +209,5 @@ function clear(i) {
   }
 }
 
-export function summaryDisplay() {
-  // Function responsible for display one or both tables
-  const d1 = d3.select('#summary-check-1').property("checked")
-  const d2 = d3.select('#summary-check-2').property("checked")
 
-  if (d1 && d2) {
-    d3.select('#summary-div-1').classed("split", true)
-    d3.select('#summary-div-2').classed("split", true)
-  } else {
-    d3.select('#summary-div-1').classed("split", false)
-    d3.select('#summary-div-2').classed("split", false)
-  }
-  if (d1) {
-    d3.select('#summary-div-1').style("display", "")
-  } else {
-    d3.select('#summary-div-1').style("display", "none")
-  }
-  if (d2) {
-    d3.select('#summary-div-2').style("display", "")
-  } else {
-    d3.select('#summary-div-2').style("display", "none")
-  }
-  if (summary[0]) summary[0].redraw(true)
-  if (summary[1]) summary[1].redraw(true)
-}
 

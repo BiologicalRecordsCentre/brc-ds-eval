@@ -1,8 +1,37 @@
-import * as d3 from 'd3'
+import d3 from 'd3'
+import dateFormat from 'dateformat'
 import * as load from './load'
 import * as summary from './summary'
 import * as phenology from './phenology'
 import * as mapoverview from './mapoverview'
+
+console.log('dateFormat', dateFormat)
+
+
+const dateFormats = [
+  {
+    re: /^\d\d\d\d.\d\d.\d\d$/,
+    fnYear: (date) => date.substr(0,4),
+    fnWeek: (date) => {
+      const year = date.substr(0,4)
+      const month = date.substr(5,2)
+      const day = date.substr(8,2)
+      const dte = new Date(year, month, day)
+      return dateFormat(dte, 'W')
+    }
+  },
+  {
+    re: /^\d\d.\d\d.\d\d\d\d$/,
+    fnYear: (date) => date.substr(6,4),
+    fnWeek: (date) => {
+      const year = date.substr(6,4)
+      const month = date.substr(3,2)
+      const day = date.substr(0,2)
+      const dte = new Date(year, month, day)
+      return dateFormat(dte, 'W')
+    }
+  }
+]
 
 export const data = [{}, {}]
 
@@ -84,4 +113,28 @@ export function datasetCheckboxes(sel, prefix, fn) {
   legend.text('Display dataset')
   makeCheckBox(1, true)
   makeCheckBox(2, false)
+}
+
+export function dateValid(date) {
+
+  return dateFormats.some(df => df.re.test(date))
+  //return /^\d\d\d\d.\d\d.\d\d$/.test(date) || /^\d\d.\d\d.\d\d\d\d$/.test(date)
+}
+
+export function dateYear(date) {
+  const df = dateFormats.find(df => df.re.test(date))
+  if (df) {
+    return df.fnYear(date)
+  } else {
+    return null
+  }
+}
+
+export function dateWeek(date) {
+  const df = dateFormats.find(df => df.re.test(date))
+  if (df) {
+    return df.fnWeek(date)
+  } else {
+    return null
+  }
 }
