@@ -72,5 +72,6 @@ body, html {
 .input-info {
   display: inline-block;
   font-size: 0.8em;
+  margin-left: 1em;
 }
 

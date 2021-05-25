@@ -10061,7 +10061,17 @@
   }
 
   var data = [{}, {}];
-  var configFields = ['taxon', 'tvk', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus', 'source']; // Load the JNCC taxon designations CSV - convert it to a simple object
+  var configFields = ['taxon', 'tvk', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus', 'source'];
+  var configLabels = {
+    taxon: 'Taxon',
+    tvk: 'TVK',
+    gr: 'Grid ref',
+    date: 'Date',
+    recorder: 'Recorder',
+    verifier: 'Verifier',
+    verifyStatus: 'Verified status',
+    source: 'Source'
+  }; // Load the JNCC taxon designations CSV - convert it to a simple object
   // mapping tvk to desgination.
 
   d3__namespace.csv('./dist/designations.csv', function (d) {
@@ -10084,6 +10094,9 @@
   });
   function init() {
     document.getElementById("defaultOpen").click();
+    guiLoadContent('#load');
+    guiSummaryContent('#summary');
+    guiOverviewMapContent('#mapoverview');
   }
   function setFieldConfig(i) {
     var setValue = function setValue(key) {
@@ -10236,6 +10249,155 @@
         return d3__namespace.select("#".concat(cf).concat(i)).html('');
       });
     }
+  }
+
+  function guiDatasetCheckboxes(sel, prefix, fn) {
+    // Generic control to switch between datasets
+    function makeCheckBox(id, checked) {
+      var input = fldset.append('input');
+      input.attr('type', 'checkbox');
+      input.attr('id', "".concat(prefix, "-").concat(id));
+      input.attr('onclick', "brcdseval.".concat(fn, "()"));
+
+      if (checked) {
+        input.property('checked', true);
+      }
+
+      fldset.append('label').text("Dataset ".concat(id));
+    }
+
+    var fldset = d3__namespace.select(sel).append('fieldset');
+    fldset.style('margin-top', '0.5em');
+    var legend = fldset.append('legend');
+    legend.text('Display dataset');
+    makeCheckBox(1, true);
+    makeCheckBox(2, false);
+  }
+
+  function guiSummaryContent(sel) {
+    // Dataset checkboxes
+    guiDatasetCheckboxes(sel, 'summary-check', 'summaryDisplay'); // Record grouping
+
+    var p = d3__namespace.select(sel).append('p');
+    var fldset = p.append('fieldset');
+    fldset.append('legend').text('Group records by');
+
+    function makeInput(txt, value, checked) {
+      var input = fldset.append('input');
+      input.attr('type', 'radio');
+      input.attr('id', "rad-".concat(value ? value : 'none'));
+      input.attr('name', 'rad-grouping');
+      input.attr('value', value);
+      input.attr('onclick', "brcdseval.redoSummaries()");
+
+      if (checked) {
+        input.property('checked', true);
+      }
+
+      var label = fldset.append('label').text(txt);
+      label.attr('for', "rad-".concat(value ? value : 'none'));
+    }
+
+    makeInput('None', '', true);
+    makeInput('Recorder', 'recorder');
+    makeInput('Verifier', 'verifier');
+    makeInput('Verified status', 'verifyStatus');
+    makeInput('Source', 'source'); // Layout for summary tables
+
+    var div = d3__namespace.select(sel).append('div');
+
+    function tableDiv(i) {
+      var tabDiv = div.append('div');
+      tabDiv.attr('id', "summary-div-".concat(i));
+      tabDiv.append('h4').attr('id', "summary-name-".concat(i));
+      tabDiv.append('p').attr('id', "summary-message-".concat(i));
+      tabDiv.append('div').attr('id', "summary-table-".concat(i));
+    }
+
+    tableDiv(1);
+    tableDiv(2);
+  }
+
+  function guiOverviewMapContent(sel) {
+    function makeMapDiv(i) {
+      var div = d3__namespace.select(sel).append('div');
+      div.attr('id', "overviewmap-div-".concat(i));
+      div.classed('split2', true);
+      div.append('h4').attr('id', "overviewmap-name-".concat(i));
+      var p = div.append('p');
+      var input = p.append('input');
+      input.attr('id', "overviewmap-taxon-".concat(i));
+      input.attr('list', "overviewmap-datalist-".concat(i));
+      input.attr('onfocus', "brcdseval.mapoverviewClearMap(".concat(i, ", this)"));
+      input.attr('placeholder', 'Start typing taxon...');
+      var datalist = p.append('datalist');
+      datalist.attr('id', "overviewmap-datalist-".concat(i));
+      datalist.attr('autocomplete', 'on');
+      var button = p.append('button').text('Map');
+      button.attr('onclick', "brcdseval.mapoverviewMap(".concat(i, ")"));
+      div.append('p').attr('id', "overviewmap-message-".concat(i));
+      div.append('div').attr('id', "overviewmap-container-".concat(i));
+    }
+
+    makeMapDiv(1);
+    makeMapDiv(2);
+  }
+
+  function guiLoadContent(sel) {
+    // Background downloading of resources
+    d3__namespace.select(sel).append('h3').text('Packaged resources');
+    d3__namespace.select(sel).append('p').text("\n    These resources are packaged with the tool, you can carry on \n    specifying your local CSV datasets whilst these are downloading.\n  ");
+    d3__namespace.select(sel).append('p').html('JNCC taxon designations (2020): <span id="jnccLoading">downloading...</span>'); // Dataset load and field mapping
+
+    var d1 = d3__namespace.select(sel).append('div');
+
+    function splitDiv(i) {
+      var d2 = d1.append('div');
+      d2.classed('split2', true);
+      d2.append('h3').text("Local resource - dataset ".concat(i));
+      var label = d2.append('label');
+      label.attr('for', "csvFile".concat(i));
+      label.text("Browse for dataset ".concat(i, " CSV"));
+      var input = d2.append('input');
+      input.attr('type', 'file');
+      input.attr('id', "csvFile".concat(i));
+      input.attr('name', "csvFile".concat(i));
+      input.attr('accept', '.csv');
+      input.attr('onChange', "brcdseval.fileOpened(event, ".concat(i, ")"));
+      input.style('margin-left', '0.5em');
+      d2.append('div').attr('id', "csvLoading".concat(i)).style('margin-top', '0.5em').text('No file loaded');
+      d2.append('div').attr('id', "field-selects-".concat(i));
+      configFields.forEach(function (f) {
+        var d3 = d2.append('div');
+        d3.classed('field-input', true);
+        var label = d3.append('label');
+        label.attr('for', "".concat(f).concat(i));
+        label.text("".concat(configLabels[f], ":"));
+        var select = d3.append('select');
+        select.attr('id', "".concat(f).concat(i));
+        var d4 = d3.append('div');
+        d4.classed('input-info', true);
+        d4.attr('id', "".concat(f, "Info").concat(i));
+      });
+      var d5 = d2.append('div');
+      d5.classed('config-buttons', true);
+      var button1 = d5.append('button');
+      button1.attr('id', "setFieldConfig".concat(i));
+      button1.attr('onClick', "brcdseval.setFieldConfig(".concat(i, ")"));
+      button1.attr('disabled', 'true');
+      button1.text('Set config');
+      var button2 = d5.append('button');
+      button2.attr('id', "clearFieldConfig".concat(i));
+      button2.attr('onClick', "brcdseval.clearFieldConfig(".concat(i, ")"));
+      button2.attr('disabled', 'true');
+      button2.text('Clear config');
+      var d6 = d2.append('div');
+      d6.attr('id', "configStatus".concat(i));
+      d6.text('No config set');
+    }
+
+    splitDiv(1);
+    splitDiv(2);
   }
 
   var name = "brc-ds-eval";
