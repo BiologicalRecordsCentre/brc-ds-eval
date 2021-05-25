@@ -1,5 +1,7 @@
-import { openPage, init, fileOpened, setFieldConfig, clearFieldConfig } from './src/gui'
-import { summaryDisplay, redoSummaries,  } from './src/summary'
+import { openPage, init } from './src/gui'
+import { fileOpened, setFieldConfig, clearFieldConfig } from './src/load'
+import { summaryDisplay, redoSummaries  } from './src/summary'
+import { phenologyDisplay } from './src/phenology'
 import { mapoverviewDisplay, mapoverviewMap, mapoverviewClearMap } from './src/mapoverview'
 import pkg from './package.json'
 
@@ -17,5 +19,6 @@ export {
   redoSummaries,
   mapoverviewDisplay,
   mapoverviewMap,
-  mapoverviewClearMap
+  mapoverviewClearMap,
+  phenologyDisplay
 } 

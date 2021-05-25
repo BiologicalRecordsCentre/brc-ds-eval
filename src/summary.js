@@ -1,8 +1,65 @@
 import * as d3 from 'd3'
+import * as gen from './gen'
 import Tabulator from 'tabulator-tables'
 
 let dataraw
 let summary = [null, null]
+
+export function gui(sel) {
+  
+  // Dataset checkboxes
+  gen.datasetCheckboxes(sel, 'summary-check', 'summaryDisplay')
+
+  // Record grouping
+  const p = d3.select(sel).append('p')
+  const fldset = p.append('fieldset')
+  fldset.append('legend').text('Group records by')
+
+  function makeInput(txt, value, checked) {
+    const input = fldset.append('input')
+    input.attr('type', 'radio')
+    input.attr('id', `rad-${value ? value : 'none'}`)
+    input.attr('name', 'rad-grouping')
+    input.attr('value', value)
+    input.attr('onclick', `brcdseval.redoSummaries()`)
+    if (checked) {
+      input.property('checked', true)
+    }
+    const label = fldset.append('label').text(txt)
+    label.attr('for', `rad-${value ? value : 'none'}`)
+  }
+  makeInput('None', '', true)
+  makeInput('Recorder', 'recorder')
+  makeInput('Verifier', 'verifier')
+  makeInput('Verified status', 'verifyStatus')
+  makeInput('Source', 'source')
+
+  // Layout for summary tables
+  const div = d3.select(sel).append('div')
+  
+  function tableDiv(i) {
+    const tabDiv = div.append('div')
+    tabDiv.attr('id', `summary-div-${i}`)
+    tabDiv.append('h4').attr('id', `summary-name-${i}`)
+    tabDiv.append('p').attr('id', `summary-message-${i}`)
+    tabDiv.append('div').attr('id', `summary-table-${i}`)
+  }
+  tableDiv(1)
+  tableDiv(2)
+}
+
+export function tabSelected() {
+  dataraw = gen.data
+  summariesTables()
+}
+
+export function dataCleared(i) {
+  clear(i)
+}
+
+export function fieldConfigCleared(i) {
+  clear(i)
+}
 
 function summarise(i) {
   const data = dataraw[i-1]
@@ -124,12 +181,7 @@ export function redoSummaries() {
   summariesTables()
 }
 
-export function tabSelected(data) {
-  dataraw = data
-  summariesTables()
-}
-
-export function clear(i) {
+function clear(i) {
   if (summary[i-1]) {
     summary[i-1].destroy()
     summary[i-1] = null
@@ -162,3 +214,4 @@ export function summaryDisplay() {
   if (summary[0]) summary[0].redraw(true)
   if (summary[1]) summary[1].redraw(true)
 }
+

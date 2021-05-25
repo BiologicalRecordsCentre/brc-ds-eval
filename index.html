@@ -4,9 +4,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://d3js.org/d3.v5.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-atlas/dist/brcatlas.umd.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-atlas/dist/brcatlas.umd.min.css">
 
+<script src="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-charts/dist/brccharts.umd.min.js"></script>
 
 <script src="./dist/brc-ds-eval.umd.js"></script>
 <link rel="stylesheet" type="text/css" href="./dist/brc-ds-eval.umd.css">
@@ -21,12 +23,8 @@
     If you haven't used this tool before, start on the '<i>Help</i>' tab.
 </p>
 <div id="tabbar">
-    <button class="tablink" onclick="brcdseval.openPage('help', this)" id="defaultOpen">Help</button>
-    <button class="tablink" onclick="brcdseval.openPage('load', this)">Load</button>
-    <button class="tablink" onclick="brcdseval.openPage('summary', this)">Summary</button>
-    <button class="tablink" onclick="brcdseval.openPage('mapoverview', this)">Overview map</button>
+  <button class="tablink" onclick="brcdseval.openPage('help', this)" id="tablink-help">Help</button>
 </div>
-
 
 <div id="help" class="tabcontent">
   <h3>Introduction</h3>
@@ -45,9 +43,6 @@
   </ul>
 </div>
 
-<div id="load" class="tabcontent"></div>
-<div id="summary" class="tabcontent"></div>
-<div id="mapoverview" class="tabcontent"></div>
 <script>brcdseval.init();</script>
 </body>
 </html> 

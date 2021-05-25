@@ -8482,6 +8482,240 @@
     return ret;
   }
 
+  // mapping tvk to desgination.
+
+  d3__namespace.csv('./dist/designations.csv', function (d) {
+    if (d['Reporting category'] === 'Nationally Scarce, Nationally Rare and Other Species') {
+      return {
+        tvk: d['Recommended taxon version'],
+        designation: d['Designation']
+      };
+    }
+  }).then(function (data) {
+    window.taxonDesignations = data.reduce(function (a, d) {
+      a[d.tvk] = d.designation;
+      return a;
+    }, {});
+    d3__namespace.select('#jnccLoading').text('loaded').style('color', 'blue');
+  })["catch"](function (error) {
+    // handle error  
+    console.log(error);
+    d3__namespace.select('#jnccLoading').text('failed to load').style('color', 'red');
+  }); // Standard interface functions
+
+  function gui$3(sel) {
+    // Background downloading of resources
+    d3__namespace.select(sel).append('h3').text('Packaged resources');
+    d3__namespace.select(sel).append('p').text("\n    These resources are packaged with the tool, you can carry on \n    specifying your local CSV datasets whilst these are downloading.\n  ");
+    d3__namespace.select(sel).append('p').html('JNCC taxon designations (2020): <span id="jnccLoading">downloading...</span>'); // Dataset load and field mapping
+
+    var d1 = d3__namespace.select(sel).append('div');
+
+    function splitDiv(i) {
+      var d2 = d1.append('div');
+      d2.classed('split2', true);
+      d2.append('h3').text("Local resource - dataset ".concat(i));
+      var label = d2.append('label');
+      label.attr('for', "csvFile".concat(i));
+      label.text("Browse for dataset ".concat(i, " CSV"));
+      var input = d2.append('input');
+      input.attr('type', 'file');
+      input.attr('id', "csvFile".concat(i));
+      input.attr('name', "csvFile".concat(i));
+      input.attr('accept', '.csv');
+      input.attr('onChange', "brcdseval.fileOpened(event, ".concat(i, ")"));
+      input.style('margin-left', '0.5em');
+      d2.append('div').attr('id', "csvLoading".concat(i)).style('margin-top', '0.5em').text('No file loaded');
+      d2.append('div').attr('id', "field-selects-".concat(i));
+      configFields.forEach(function (f) {
+        var d3 = d2.append('div');
+        d3.classed('field-input', true);
+        var label = d3.append('label');
+        label.attr('for', "".concat(f.id).concat(i));
+        label.text("".concat(f.caption, ":"));
+        var select = d3.append('select');
+        select.attr('id', "".concat(f.id).concat(i));
+        var d4 = d3.append('div');
+        d4.classed('input-info', true);
+        d4.attr('id', "".concat(f.id, "Info").concat(i));
+      });
+      var d5 = d2.append('div');
+      d5.classed('config-buttons', true);
+      var button1 = d5.append('button');
+      button1.attr('id', "setFieldConfig".concat(i));
+      button1.attr('onClick', "brcdseval.setFieldConfig(".concat(i, ")"));
+      button1.attr('disabled', 'true');
+      button1.text('Set config');
+      var button2 = d5.append('button');
+      button2.attr('id', "clearFieldConfig".concat(i));
+      button2.attr('onClick', "brcdseval.clearFieldConfig(".concat(i, ")"));
+      button2.attr('disabled', 'true');
+      button2.text('Clear config');
+      var d6 = d2.append('div');
+      d6.attr('id', "configStatus".concat(i));
+      d6.text('No config set');
+    }
+
+    splitDiv(1);
+    splitDiv(2);
+  }
+  function tabSelected$3() {}
+  function dataCleared$3(i) {
+    d3__namespace.select("#csvLoading".concat(i)).html('No file loaded');
+    d3__namespace.select("#csvLoading".concat(i)).style('color', 'red');
+    setFieldDropdowns(i);
+  }
+  function fieldConfigCleared$3(i) {
+    d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', false);
+    d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', false);
+    d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', true);
+    d3__namespace.select("#configStatus".concat(i)).html('No config set');
+    d3__namespace.select("#configStatus".concat(i)).style('color', 'red');
+  } // Exported from the library to use from html interface
+
+  function fileOpened(event, i) {
+    if (event.target.files[0] !== undefined) {
+      d3__namespace.select("#csvLoading".concat(i)).html('Loading file...');
+      d3__namespace.select("#csvLoading".concat(i)).style('color', 'orange');
+      var reader = new FileReader();
+      reader.addEventListener('load', function (event) {
+        d3__namespace.csv(event.target.result).then(function (json) {
+          //console.log(json)
+          d3__namespace.select("#csvLoading".concat(i)).html("File loaded - ".concat(json.length, " records"));
+          d3__namespace.select("#csvLoading".concat(i)).style('color', 'blue');
+          data[i - 1].json = json;
+          setFieldDropdowns(i);
+          d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', false);
+        });
+      });
+      reader.readAsDataURL(event.target.files[0]);
+      data[i - 1].name = event.target.files[0].name;
+    } else {
+      clearDataset(i);
+    }
+
+    clearFieldConfig(i);
+    d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', true);
+  }
+  function setFieldConfig(i) {
+    var setValue = function setValue(key) {
+      var value = d3__namespace.select("#".concat(key).concat(i)).property('value');
+      data[i - 1].fields[key] = value; // Also store values in local storage so that they can be conveniently
+      // set in future for similar dataset
+
+      localStorage.setItem("".concat(key).concat(i), value);
+    };
+
+    data[i - 1].fields = {};
+    configFields.forEach(function (f) {
+      return setValue(f.id);
+    });
+    d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', true);
+    d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', true);
+    d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', false);
+    d3__namespace.select("#configStatus".concat(i)).html('Config is set');
+    d3__namespace.select("#configStatus".concat(i)).style('color', 'blue'); // Dataset stats for the configured fields
+
+    configFields.forEach(function (cf) {
+      var fcsv = data[i - 1].fields[cf.id];
+
+      if (fcsv) {
+        var unique = _toConsumableArray(new Set(data[i - 1].json.filter(function (r) {
+          return r[fcsv] !== '';
+        }).map(function (r) {
+          return r[fcsv];
+        })));
+
+        var missing = data[i - 1].json.filter(function (r) {
+          return r[fcsv] === '';
+        });
+        var invalid;
+
+        if (cf.id === 'gr') {
+          invalid = data[i - 1].json.filter(function (r) {
+            if (!r[fcsv]) return false; // Missing values not counted as invalid
+
+            try {
+              checkGr(r[fcsv]);
+            } catch (err) {
+              return true;
+            }
+
+            return false;
+          });
+        } else if (cf.id === 'date') {
+          invalid = data[i - 1].json.filter(function (r) {
+            if (!r[fcsv]) return false; // Missing values not counted as invalid
+
+            return !(/^\d\d\d\d.\d\d.\d\d$/.test(r[fcsv]) || /^\d\d.\d\d.\d\d\d\d$/.test(r[fcsv]));
+          });
+        }
+
+        if (cf.id === 'date' || cf.id === 'gr') {
+          d3__namespace.select("#".concat(cf.id, "Info").concat(i)).text("Invalid: ".concat(invalid.length, ", Missing: ").concat(missing.length));
+        } else {
+          d3__namespace.select("#".concat(cf.id, "Info").concat(i)).text("Unique: ".concat(unique.length, ", Missing: ").concat(missing.length));
+        }
+      } else {
+        d3__namespace.select("#".concat(cf.id, "Info").concat(i)).text('');
+      }
+    });
+  }
+  function clearFieldConfig(i) {
+    data[i - 1].fields = null;
+    tabs.forEach(function (t) {
+      t.fns.fieldConfigCleared(i);
+    });
+  } // Helper functions
+
+  function clearDataset(i) {
+    data[i - 1].name = null;
+    data[i - 1].json = null;
+    data[i - 1].fields = null;
+    tabs.forEach(function (t) {
+      t.fns.dataCleared(i);
+    });
+  }
+
+  function setFieldDropdowns(i) {
+    // Clear existing
+    configFields.forEach(function (cf) {
+      return d3__namespace.select("#".concat(cf.id).concat(i)).html('');
+    });
+    configFields.forEach(function (cf) {
+      return d3__namespace.select("#".concat(cf.id, "Info").concat(i)).text('');
+    });
+
+    if (data[i - 1].json) {
+      var fields = [''].concat(_toConsumableArray(Object.keys(data[i - 1].json[0])));
+      fields.forEach(function (f) {
+        configFields.forEach(function (cf) {
+          var opt = d3__namespace.select("#".concat(cf.id).concat(i)).append('option');
+          opt.attr('value', f);
+          opt.text(f);
+        });
+      });
+      configFields.forEach(function (cf) {
+        d3__namespace.select("#".concat(cf.id).concat(i)).property('value', localStorage.getItem("".concat(cf.id).concat(i)));
+      });
+    } else {
+      configFields.forEach(function (cf) {
+        return d3__namespace.select("#".concat(cf.id).concat(i)).html('');
+      });
+    }
+  }
+
+  var load = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    gui: gui$3,
+    tabSelected: tabSelected$3,
+    dataCleared: dataCleared$3,
+    fieldConfigCleared: fieldConfigCleared$3,
+    fileOpened: fileOpened,
+    setFieldConfig: setFieldConfig,
+    clearFieldConfig: clearFieldConfig
+  });
+
   var _typeof=typeof Symbol==="function"&&_typeof$1(Symbol.iterator)==="symbol"?function(obj){return _typeof$1(obj);}:function(obj){return obj&&typeof Symbol==="function"&&obj.constructor===Symbol&&obj!==Symbol.prototype?"symbol":_typeof$1(obj);};if(!Array.prototype.findIndex){Object.defineProperty(Array.prototype,'findIndex',{value:function value(predicate){// 1. Let O be ? ToObject(this value).
   if(this==null){throw new TypeError('"this" is null or not defined');}var o=Object(this);// 2. Let len be ? ToLength(? Get(O, "length")).
   var len=o.length>>>0;// 3. If IsCallable(predicate) is false, throw a TypeError exception.
@@ -9754,6 +9988,59 @@
 
   var dataraw$1;
   var summary = [null, null];
+  function gui$2(sel) {
+    // Dataset checkboxes
+    datasetCheckboxes(sel, 'summary-check', 'summaryDisplay'); // Record grouping
+
+    var p = d3__namespace.select(sel).append('p');
+    var fldset = p.append('fieldset');
+    fldset.append('legend').text('Group records by');
+
+    function makeInput(txt, value, checked) {
+      var input = fldset.append('input');
+      input.attr('type', 'radio');
+      input.attr('id', "rad-".concat(value ? value : 'none'));
+      input.attr('name', 'rad-grouping');
+      input.attr('value', value);
+      input.attr('onclick', "brcdseval.redoSummaries()");
+
+      if (checked) {
+        input.property('checked', true);
+      }
+
+      var label = fldset.append('label').text(txt);
+      label.attr('for', "rad-".concat(value ? value : 'none'));
+    }
+
+    makeInput('None', '', true);
+    makeInput('Recorder', 'recorder');
+    makeInput('Verifier', 'verifier');
+    makeInput('Verified status', 'verifyStatus');
+    makeInput('Source', 'source'); // Layout for summary tables
+
+    var div = d3__namespace.select(sel).append('div');
+
+    function tableDiv(i) {
+      var tabDiv = div.append('div');
+      tabDiv.attr('id', "summary-div-".concat(i));
+      tabDiv.append('h4').attr('id', "summary-name-".concat(i));
+      tabDiv.append('p').attr('id', "summary-message-".concat(i));
+      tabDiv.append('div').attr('id', "summary-table-".concat(i));
+    }
+
+    tableDiv(1);
+    tableDiv(2);
+  }
+  function tabSelected$2() {
+    dataraw$1 = data;
+    summariesTables();
+  }
+  function dataCleared$2(i) {
+    clear$1(i);
+  }
+  function fieldConfigCleared$2(i) {
+    clear$1(i);
+  }
 
   function summarise(i) {
     var data = dataraw$1[i - 1];
@@ -9894,10 +10181,7 @@
     clear$1(2);
     summariesTables();
   }
-  function tabSelected$1(data) {
-    dataraw$1 = data;
-    summariesTables();
-  }
+
   function clear$1(i) {
     if (summary[i - 1]) {
       summary[i - 1].destroy();
@@ -9905,6 +10189,7 @@
       d3__namespace.select("#summary-table-".concat(i)).html('');
     }
   }
+
   function summaryDisplay() {
     // Function responsible for display one or both tables
     var d1 = d3__namespace.select('#summary-check-1').property("checked");
@@ -9934,53 +10219,106 @@
     if (summary[1]) summary[1].redraw(true);
   }
 
+  var summary$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    gui: gui$2,
+    tabSelected: tabSelected$2,
+    dataCleared: dataCleared$2,
+    fieldConfigCleared: fieldConfigCleared$2,
+    redoSummaries: redoSummaries,
+    summaryDisplay: summaryDisplay
+  });
+
+  function gui$1(sel) {
+    datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay'); // Layout for summary tables
+
+    var div = d3__namespace.select(sel).append('div');
+
+    function tableDiv(i) {
+      var tabDiv = div.append('div');
+      tabDiv.attr('id', "phenology-div-".concat(i));
+      tabDiv.append('h4').attr('id', "phenology-name-".concat(i));
+      tabDiv.append('p').attr('id', "phenology-message-".concat(i));
+      tabDiv.append('div').attr('id', "phenology-chart-".concat(i));
+    }
+
+    tableDiv(1);
+    tableDiv(2);
+    d3__namespace.select('#phenology-div-1').text('phenology chart 1');
+    d3__namespace.select('#phenology-div-2').text('phenology chart 2'); //const d1 = d3.select(sel).append('div')
+  }
+  function tabSelected$1() {// const phenData = [null, null]
+    // for (let i=0; i<=2; i++) {
+    //   if (gen.data[i] && gen.data[i].fields && gen.data[i].fields.taxon) {
+    //     gen.data[i].json
+    //   }
+    // }
+  }
+  function dataCleared$1(i) {}
+  function fieldConfigCleared$1(i) {}
+  function phenologyDisplay() {
+    // Function responsible for display one or both tables
+    var d1 = d3__namespace.select('#phenology-check-1').property("checked");
+    var d2 = d3__namespace.select('#phenology-check-2').property("checked");
+
+    if (d1 && d2) {
+      d3__namespace.select('#phenology-div-1').classed("split", true);
+      d3__namespace.select('#phenology-div-2').classed("split", true);
+    } else {
+      d3__namespace.select('#phenology-div-1').classed("split", false);
+      d3__namespace.select('#phenology-div-2').classed("split", false);
+    }
+
+    if (d1) {
+      d3__namespace.select('#phenology-div-1').style("display", "");
+    } else {
+      d3__namespace.select('#phenology-div-1').style("display", "none");
+    }
+
+    if (d2) {
+      d3__namespace.select('#phenology-div-2').style("display", "");
+    } else {
+      d3__namespace.select('#phenology-div-2').style("display", "none");
+    }
+  }
+
+  var phenology = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    gui: gui$1,
+    tabSelected: tabSelected$1,
+    dataCleared: dataCleared$1,
+    fieldConfigCleared: fieldConfigCleared$1,
+    phenologyDisplay: phenologyDisplay
+  });
+
   var dataraw,
       maps = [null, null],
       taxa = [null, null];
+  function gui(sel) {
+    function makeMapDiv(i) {
+      var div = d3__namespace.select(sel).append('div');
+      div.attr('id', "overviewmap-div-".concat(i));
+      div.classed('split2', true);
+      div.append('h4').attr('id', "overviewmap-name-".concat(i));
+      var p = div.append('p');
+      var input = p.append('input');
+      input.attr('id', "overviewmap-taxon-".concat(i));
+      input.attr('list', "overviewmap-datalist-".concat(i));
+      input.attr('onfocus', "brcdseval.mapoverviewClearMap(".concat(i, ", this)"));
+      input.attr('placeholder', 'Start typing taxon...');
+      var datalist = p.append('datalist');
+      datalist.attr('id', "overviewmap-datalist-".concat(i));
+      datalist.attr('autocomplete', 'on');
+      var button = p.append('button').text('Map');
+      button.attr('onclick', "brcdseval.mapoverviewMap(".concat(i, ")"));
+      div.append('p').attr('id', "overviewmap-message-".concat(i));
+      div.append('div').attr('id', "overviewmap-container-".concat(i));
+    }
 
-  function genHecatdMap(props) {
-    var i = props.i;
-    var taxon = props.taxon;
-    var fgr = dataraw[i - 1].fields.gr;
-    var ft = dataraw[i - 1].fields.taxon;
-    var hectads = [];
-    dataraw[i - 1].json.forEach(function (r) {
-      var grcheck;
-
-      try {
-        grcheck = checkGr(r[fgr]);
-      } catch (err) {
-        grcheck = null;
-      }
-
-      if (grcheck && grcheck.precision <= 10000) {
-        var hectad = getLowerResGrs(r[fgr]).p10000;
-
-        if (r[ft] === taxon) {
-          if (hectads.indexOf(hectad) === -1) {
-            hectads.push(hectad);
-          }
-        }
-      }
-    });
-    var data = hectads.map(function (h) {
-      return {
-        gr: h,
-        colour: 'black'
-      };
-    });
-    return new Promise(function (resolve) {
-      resolve({
-        records: data,
-        precision: 10000,
-        shape: 'circle',
-        opacity: 1,
-        size: 1
-      });
-    });
+    makeMapDiv(1);
+    makeMapDiv(2);
   }
-
-  function tabSelected(data) {
+  function tabSelected() {
     dataraw = data;
 
     var checkMap = function checkMap(i) {
@@ -10025,6 +10363,53 @@
     checkMap(1);
     checkMap(2);
   }
+  function dataCleared(i) {//maps[i-1].clearMap()
+  }
+  function fieldConfigCleared(i) {//maps[i-1].clearMap()
+  }
+
+  function genHecatdMap(props) {
+    var i = props.i;
+    var taxon = props.taxon;
+    var fgr = dataraw[i - 1].fields.gr;
+    var ft = dataraw[i - 1].fields.taxon;
+    var hectads = [];
+    dataraw[i - 1].json.forEach(function (r) {
+      var grcheck;
+
+      try {
+        grcheck = checkGr(r[fgr]);
+      } catch (err) {
+        grcheck = null;
+      }
+
+      if (grcheck && grcheck.precision <= 10000) {
+        var hectad = getLowerResGrs(r[fgr]).p10000;
+
+        if (r[ft] === taxon) {
+          if (hectads.indexOf(hectad) === -1) {
+            hectads.push(hectad);
+          }
+        }
+      }
+    });
+    var data = hectads.map(function (h) {
+      return {
+        gr: h,
+        colour: 'black'
+      };
+    });
+    return new Promise(function (resolve) {
+      resolve({
+        records: data,
+        precision: 10000,
+        shape: 'circle',
+        opacity: 1,
+        size: 1
+      });
+    });
+  }
+
   function mapoverviewMap(i) {
     var taxon = d3__namespace.select("#overviewmap-taxon-".concat(i)).property('value');
     maps[i - 1].setIdentfier({
@@ -10060,198 +10445,62 @@
     }
   }
 
-  var data = [{}, {}];
-  var configFields = ['taxon', 'tvk', 'gr', 'date', 'recorder', 'verifier', 'verifyStatus', 'source'];
-  var configLabels = {
-    taxon: 'Taxon',
-    tvk: 'TVK',
-    gr: 'Grid ref',
-    date: 'Date',
-    recorder: 'Recorder',
-    verifier: 'Verifier',
-    verifyStatus: 'Verified status',
-    source: 'Source'
-  }; // Load the JNCC taxon designations CSV - convert it to a simple object
-  // mapping tvk to desgination.
-
-  d3__namespace.csv('./dist/designations.csv', function (d) {
-    if (d['Reporting category'] === 'Nationally Scarce, Nationally Rare and Other Species') {
-      return {
-        tvk: d['Recommended taxon version'],
-        designation: d['Designation']
-      };
-    }
-  }).then(function (data) {
-    window.taxonDesignations = data.reduce(function (a, d) {
-      a[d.tvk] = d.designation;
-      return a;
-    }, {});
-    d3__namespace.select('#jnccLoading').text('loaded').style('color', 'blue');
-  })["catch"](function (error) {
-    // handle error  
-    console.log(error);
-    d3__namespace.select('#jnccLoading').text('failed to load').style('color', 'red');
+  var mapoverview = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    gui: gui,
+    tabSelected: tabSelected,
+    dataCleared: dataCleared,
+    fieldConfigCleared: fieldConfigCleared,
+    mapoverviewMap: mapoverviewMap,
+    clear: clear,
+    mapoverviewClearMap: mapoverviewClearMap,
+    mapoverviewDisplay: mapoverviewDisplay
   });
-  function init() {
-    document.getElementById("defaultOpen").click();
-    guiLoadContent('#load');
-    guiSummaryContent('#summary');
-    guiOverviewMapContent('#mapoverview');
-  }
-  function setFieldConfig(i) {
-    var setValue = function setValue(key) {
-      var value = d3__namespace.select("#".concat(key).concat(i)).property('value');
-      data[i - 1].fields[key] = value; // Also store values in local storage so that they can be conveniently
-      // set in future for similar dataset
 
-      localStorage.setItem("".concat(key).concat(i), value);
-    };
-
-    data[i - 1].fields = {};
-    configFields.forEach(function (f) {
-      return setValue(f);
-    });
-    d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', true);
-    d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', true);
-    d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', false);
-    d3__namespace.select("#configStatus".concat(i)).html('Config is set');
-    d3__namespace.select("#configStatus".concat(i)).style('color', 'blue'); // Dataset stats for the configured fields
-
-    configFields.forEach(function (cf) {
-      var fcsv = data[i - 1].fields[cf];
-
-      if (fcsv) {
-        var unique = _toConsumableArray(new Set(data[i - 1].json.filter(function (r) {
-          return r[fcsv] !== '';
-        }).map(function (r) {
-          return r[fcsv];
-        })));
-
-        var missing = data[i - 1].json.filter(function (r) {
-          return r[fcsv] === '';
-        });
-        var invalid;
-
-        if (cf === 'gr') {
-          invalid = data[i - 1].json.filter(function (r) {
-            if (!r[fcsv]) return false; // Missing values not counted as invalid
-
-            try {
-              checkGr(r[fcsv]);
-            } catch (err) {
-              return true;
-            }
-
-            return false;
-          });
-        } else if (cf === 'date') {
-          invalid = data[i - 1].json.filter(function (r) {
-            if (!r[fcsv]) return false; // Missing values not counted as invalid
-
-            return !(/^\d\d\d\d.\d\d.\d\d$/.test(r[fcsv]) || /^\d\d.\d\d.\d\d\d\d$/.test(r[fcsv]));
-          });
-        }
-
-        if (cf === 'date' || cf === 'gr') {
-          d3__namespace.select("#".concat(cf, "Info").concat(i)).text("Invalid: ".concat(invalid.length, ", Missing: ").concat(missing.length));
-        } else {
-          d3__namespace.select("#".concat(cf, "Info").concat(i)).text("Unique: ".concat(unique.length, ", Missing: ").concat(missing.length));
-        }
-      } else {
-        d3__namespace.select("#".concat(cf, "Info").concat(i)).text('');
-      }
-    });
-  }
-  function clearFieldConfig(i) {
-    data[i - 1].fields = null;
-    d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', false);
-    d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', false);
-    d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', true);
-    d3__namespace.select("#configStatus".concat(i)).html('No config set');
-    d3__namespace.select("#configStatus".concat(i)).style('color', 'red');
-    clear$1(i);
-    clear(i);
-  }
-  function openPage(pageName, tabLink) {
-    // Sort out style on the tablink buttons and display
-    // the page content associated with the selected tab
-    d3__namespace.selectAll(".tabcontent").style("display", "none");
-    d3__namespace.select("#".concat(pageName)).style("display", "block");
-    d3__namespace.selectAll(".tablink").style("background-color", "");
-    d3__namespace.select(tabLink).style("background-color", "green");
-
-    if (pageName === 'summary') {
-      tabSelected$1(data);
-    }
-
-    if (pageName === 'mapoverview') {
-      tabSelected(data);
-    }
-  }
-  function fileOpened(event, i) {
-    if (event.target.files[0] !== undefined) {
-      d3__namespace.select("#csvLoading".concat(i)).html('Loading file...');
-      d3__namespace.select("#csvLoading".concat(i)).style('color', 'orange');
-      var reader = new FileReader();
-      reader.addEventListener('load', function (event) {
-        d3__namespace.csv(event.target.result).then(function (json) {
-          //console.log(json)
-          d3__namespace.select("#csvLoading".concat(i)).html("File loaded - ".concat(json.length, " records"));
-          d3__namespace.select("#csvLoading".concat(i)).style('color', 'blue');
-          data[i - 1].json = json;
-          setFieldDropdowns(i);
-          d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', false);
-        });
-      });
-      reader.readAsDataURL(event.target.files[0]);
-      data[i - 1].name = event.target.files[0].name;
-    } else {
-      clearDataset(i);
-    }
-
-    clearFieldConfig(i);
-    d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', true);
-  }
-
-  function clearDataset(i) {
-    d3__namespace.select("#csvLoading".concat(i)).html('No file loaded');
-    d3__namespace.select("#csvLoading".concat(i)).style('color', 'red');
-    data[i - 1].name = null;
-    data[i - 1].json = null;
-    data[i - 1].fields = null;
-    setFieldDropdowns(i);
-    clear$1(i);
-  }
-
-  function setFieldDropdowns(i) {
-    // Clear existing
-    configFields.forEach(function (cf) {
-      return d3__namespace.select("#".concat(cf).concat(i)).html('');
-    });
-    configFields.forEach(function (cf) {
-      return d3__namespace.select("#".concat(cf, "Info").concat(i)).text('');
-    });
-
-    if (data[i - 1].json) {
-      var fields = [''].concat(_toConsumableArray(Object.keys(data[i - 1].json[0])));
-      fields.forEach(function (f) {
-        configFields.forEach(function (cf) {
-          var opt = d3__namespace.select("#".concat(cf).concat(i)).append('option');
-          opt.attr('value', f);
-          opt.text(f);
-        });
-      });
-      configFields.forEach(function (cf) {
-        d3__namespace.select("#".concat(cf).concat(i)).property('value', localStorage.getItem("".concat(cf).concat(i)));
-      });
-    } else {
-      configFields.forEach(function (cf) {
-        return d3__namespace.select("#".concat(cf).concat(i)).html('');
-      });
-    }
-  }
-
-  function guiDatasetCheckboxes(sel, prefix, fn) {
+  var data = [{}, {}];
+  var tabs = [{
+    id: 'load',
+    caption: 'Load',
+    fns: load
+  }, {
+    id: 'summary',
+    caption: 'Summary',
+    fns: summary$1
+  }, {
+    id: 'mapoverview',
+    caption: 'Overview map',
+    fns: mapoverview
+  }, {
+    id: 'phenology',
+    caption: 'Phenology',
+    fns: phenology
+  }];
+  var configFields = [{
+    id: 'taxon',
+    caption: 'Taxon'
+  }, {
+    id: 'tvk',
+    caption: 'TVK'
+  }, {
+    id: 'gr',
+    caption: 'Grid ref'
+  }, {
+    id: 'date',
+    caption: 'Date'
+  }, {
+    id: 'recorder',
+    caption: 'Recorder'
+  }, {
+    id: 'verifier',
+    caption: 'Verifier'
+  }, {
+    id: 'verifyStatus',
+    caption: 'Verified status'
+  }, {
+    id: 'source',
+    caption: 'Source'
+  }];
+  function datasetCheckboxes(sel, prefix, fn) {
     // Generic control to switch between datasets
     function makeCheckBox(id, checked) {
       var input = fldset.append('input');
@@ -10274,130 +10523,33 @@
     makeCheckBox(2, false);
   }
 
-  function guiSummaryContent(sel) {
-    // Dataset checkboxes
-    guiDatasetCheckboxes(sel, 'summary-check', 'summaryDisplay'); // Record grouping
+  function init() {
+    tabs.forEach(function (t) {
+      var button = d3__namespace.select('#tabbar').append('button');
+      button.text(t.caption);
+      button.attr('id', "tablink-".concat(t.id));
+      button.classed('tablink', true);
+      button.attr('onclick', "brcdseval.openPage('".concat(t.id, "')"));
+      var div = d3__namespace.select('body').append('div');
+      div.attr('id', t.id);
+      div.classed('tabcontent', true);
+      t.fns.gui("#".concat(t.id));
+    }); // Initialise on help page
 
-    var p = d3__namespace.select(sel).append('p');
-    var fldset = p.append('fieldset');
-    fldset.append('legend').text('Group records by');
-
-    function makeInput(txt, value, checked) {
-      var input = fldset.append('input');
-      input.attr('type', 'radio');
-      input.attr('id', "rad-".concat(value ? value : 'none'));
-      input.attr('name', 'rad-grouping');
-      input.attr('value', value);
-      input.attr('onclick', "brcdseval.redoSummaries()");
-
-      if (checked) {
-        input.property('checked', true);
-      }
-
-      var label = fldset.append('label').text(txt);
-      label.attr('for', "rad-".concat(value ? value : 'none'));
-    }
-
-    makeInput('None', '', true);
-    makeInput('Recorder', 'recorder');
-    makeInput('Verifier', 'verifier');
-    makeInput('Verified status', 'verifyStatus');
-    makeInput('Source', 'source'); // Layout for summary tables
-
-    var div = d3__namespace.select(sel).append('div');
-
-    function tableDiv(i) {
-      var tabDiv = div.append('div');
-      tabDiv.attr('id', "summary-div-".concat(i));
-      tabDiv.append('h4').attr('id', "summary-name-".concat(i));
-      tabDiv.append('p').attr('id', "summary-message-".concat(i));
-      tabDiv.append('div').attr('id', "summary-table-".concat(i));
-    }
-
-    tableDiv(1);
-    tableDiv(2);
+    openPage('help');
   }
+  function openPage(id) {
+    // Sort out style on the tablink buttons and display
+    // the page content associated with the selected tab
+    d3__namespace.selectAll(".tabcontent").style("display", "none");
+    d3__namespace.select("#".concat(id)).style("display", "block");
+    d3__namespace.selectAll(".tablink").style("background-color", "");
+    d3__namespace.select("#tablink-".concat(id)).style("background-color", "green"); // Call the tabSelected function
 
-  function guiOverviewMapContent(sel) {
-    function makeMapDiv(i) {
-      var div = d3__namespace.select(sel).append('div');
-      div.attr('id', "overviewmap-div-".concat(i));
-      div.classed('split2', true);
-      div.append('h4').attr('id', "overviewmap-name-".concat(i));
-      var p = div.append('p');
-      var input = p.append('input');
-      input.attr('id', "overviewmap-taxon-".concat(i));
-      input.attr('list', "overviewmap-datalist-".concat(i));
-      input.attr('onfocus', "brcdseval.mapoverviewClearMap(".concat(i, ", this)"));
-      input.attr('placeholder', 'Start typing taxon...');
-      var datalist = p.append('datalist');
-      datalist.attr('id', "overviewmap-datalist-".concat(i));
-      datalist.attr('autocomplete', 'on');
-      var button = p.append('button').text('Map');
-      button.attr('onclick', "brcdseval.mapoverviewMap(".concat(i, ")"));
-      div.append('p').attr('id', "overviewmap-message-".concat(i));
-      div.append('div').attr('id', "overviewmap-container-".concat(i));
-    }
-
-    makeMapDiv(1);
-    makeMapDiv(2);
-  }
-
-  function guiLoadContent(sel) {
-    // Background downloading of resources
-    d3__namespace.select(sel).append('h3').text('Packaged resources');
-    d3__namespace.select(sel).append('p').text("\n    These resources are packaged with the tool, you can carry on \n    specifying your local CSV datasets whilst these are downloading.\n  ");
-    d3__namespace.select(sel).append('p').html('JNCC taxon designations (2020): <span id="jnccLoading">downloading...</span>'); // Dataset load and field mapping
-
-    var d1 = d3__namespace.select(sel).append('div');
-
-    function splitDiv(i) {
-      var d2 = d1.append('div');
-      d2.classed('split2', true);
-      d2.append('h3').text("Local resource - dataset ".concat(i));
-      var label = d2.append('label');
-      label.attr('for', "csvFile".concat(i));
-      label.text("Browse for dataset ".concat(i, " CSV"));
-      var input = d2.append('input');
-      input.attr('type', 'file');
-      input.attr('id', "csvFile".concat(i));
-      input.attr('name', "csvFile".concat(i));
-      input.attr('accept', '.csv');
-      input.attr('onChange', "brcdseval.fileOpened(event, ".concat(i, ")"));
-      input.style('margin-left', '0.5em');
-      d2.append('div').attr('id', "csvLoading".concat(i)).style('margin-top', '0.5em').text('No file loaded');
-      d2.append('div').attr('id', "field-selects-".concat(i));
-      configFields.forEach(function (f) {
-        var d3 = d2.append('div');
-        d3.classed('field-input', true);
-        var label = d3.append('label');
-        label.attr('for', "".concat(f).concat(i));
-        label.text("".concat(configLabels[f], ":"));
-        var select = d3.append('select');
-        select.attr('id', "".concat(f).concat(i));
-        var d4 = d3.append('div');
-        d4.classed('input-info', true);
-        d4.attr('id', "".concat(f, "Info").concat(i));
-      });
-      var d5 = d2.append('div');
-      d5.classed('config-buttons', true);
-      var button1 = d5.append('button');
-      button1.attr('id', "setFieldConfig".concat(i));
-      button1.attr('onClick', "brcdseval.setFieldConfig(".concat(i, ")"));
-      button1.attr('disabled', 'true');
-      button1.text('Set config');
-      var button2 = d5.append('button');
-      button2.attr('id', "clearFieldConfig".concat(i));
-      button2.attr('onClick', "brcdseval.clearFieldConfig(".concat(i, ")"));
-      button2.attr('disabled', 'true');
-      button2.text('Clear config');
-      var d6 = d2.append('div');
-      d6.attr('id', "configStatus".concat(i));
-      d6.text('No config set');
-    }
-
-    splitDiv(1);
-    splitDiv(2);
+    var tab = tabs.find(function (t) {
+      return t.id === id;
+    });
+    if (tab) tab.fns.tabSelected();
   }
 
   var name = "brc-ds-eval";
@@ -10467,6 +10619,7 @@
   exports.mapoverviewDisplay = mapoverviewDisplay;
   exports.mapoverviewMap = mapoverviewMap;
   exports.openPage = openPage;
+  exports.phenologyDisplay = phenologyDisplay;
   exports.redoSummaries = redoSummaries;
   exports.setFieldConfig = setFieldConfig;
   exports.summaryDisplay = summaryDisplay;
