@@ -412,6 +412,44 @@
 	  })(void 0);
 	});
 
+	function ownKeys(object, enumerableOnly) {
+	  var keys = Object.keys(object);
+
+	  if (Object.getOwnPropertySymbols) {
+	    var symbols = Object.getOwnPropertySymbols(object);
+
+	    if (enumerableOnly) {
+	      symbols = symbols.filter(function (sym) {
+	        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+	      });
+	    }
+
+	    keys.push.apply(keys, symbols);
+	  }
+
+	  return keys;
+	}
+
+	function _objectSpread2(target) {
+	  for (var i = 1; i < arguments.length; i++) {
+	    var source = arguments[i] != null ? arguments[i] : {};
+
+	    if (i % 2) {
+	      ownKeys(Object(source), true).forEach(function (key) {
+	        _defineProperty(target, key, source[key]);
+	      });
+	    } else if (Object.getOwnPropertyDescriptors) {
+	      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+	    } else {
+	      ownKeys(Object(source)).forEach(function (key) {
+	        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+	      });
+	    }
+	  }
+
+	  return target;
+	}
+
 	function _typeof$1(obj) {
 	  "@babel/helpers - typeof";
 
@@ -426,6 +464,21 @@
 	  }
 
 	  return _typeof$1(obj);
+	}
+
+	function _defineProperty(obj, key, value) {
+	  if (key in obj) {
+	    Object.defineProperty(obj, key, {
+	      value: value,
+	      enumerable: true,
+	      configurable: true,
+	      writable: true
+	    });
+	  } else {
+	    obj[key] = value;
+	  }
+
+	  return obj;
 	}
 
 	function _toConsumableArray(arr) {
@@ -10421,15 +10474,15 @@
 	  summariesTables();
 	}
 	function dataCleared$2(i) {
-	  clear$1(i);
+	  clear$2(i);
 	}
 	function fieldConfigCleared$2(i) {
-	  clear$1(i);
+	  clear$2(i);
 	} // Exported from the library to use from html interface
 
 	function redoSummaries() {
-	  clear$1(1);
-	  clear$1(2);
+	  clear$2(1);
+	  clear$2(2);
 	  summariesTables();
 	}
 	function summaryDisplay() {
@@ -10591,7 +10644,7 @@
 	  generate(2);
 	}
 
-	function clear$1(i) {
+	function clear$2(i) {
 	  if (summary[i - 1]) {
 	    summary[i - 1].destroy();
 	    summary[i - 1] = null;
@@ -10609,94 +10662,333 @@
 		summaryDisplay: summaryDisplay
 	});
 
-	var phenData = [null, null]; // Standard interface functions
+	var phenData = [null, null, null];
+	var dChecked = [true, false, false];
+	var currentPerRow = [0, 0, 0];
+	var currentTaxonFilter = ['', '', ''];
+	var currentYtype = ['', '', '']; // Standard interface functions
 
 	function gui$1(sel) {
-	  datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay'); // Layout for summary tables
+	  datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay', true); // Layout for summary tables
 
 	  var div = d3__namespace.select(sel).append('div');
+	  var fldset = div.append('fieldset');
+	  fldset.append('legend').text('Phenology chart options');
+	  fldset.style('margin-top', '0.5em'); // Taxon filter
 
-	  function tableDiv(i) {
+	  var divTs = fldset.append('div');
+	  divTs.style('display', 'inline-block');
+	  var iTs = divTs.append('input');
+	  iTs.attr('id', 'phenology-filter');
+	  iTs.attr('placeholder', 'Enter a filter for taxa');
+	  var bTs = divTs.append('button');
+	  bTs.text('Apply');
+	  bTs.attr('onclick', 'brcdseval.phenologyDisplay()'); // Proportions vs counts radio buttons
+
+	  function makeRadio(type, label, checked) {
+	    var rad = divRads.append('input');
+	    rad.attr('type', 'radio');
+	    rad.attr('id', "rad-phen-count-".concat(type));
+	    rad.attr('name', 'rad-phen-count-type');
+	    rad.attr('value', type);
+	    rad.attr('onclick', "brcdseval.phenologyDisplay()");
+	    rad.property('checked', checked);
+	    var radlab = divRads.append('label').text(label);
+	    radlab.attr('for', "rad-phen-count-".concat(type));
+	  }
+
+	  var divRads = fldset.append('div');
+	  divRads.style('margin-left', '1em');
+	  divRads.style('display', 'inline-block');
+	  makeRadio('count', 'Record counts', true);
+	  makeRadio('proportion', 'Proporation of record counts', false);
+
+	  function tableDiv(i, initDisplay) {
 	    var tabDiv = div.append('div');
+
+	    if (!initDisplay) {
+	      tabDiv.style('display', 'none');
+	    }
+
 	    tabDiv.attr('id', "phenology-div-".concat(i));
 	    tabDiv.append('h4').attr('id', "phenology-name-".concat(i));
 	    tabDiv.append('p').attr('id', "phenology-message-".concat(i));
 	    tabDiv.append('div').attr('id', "phenology-chart-".concat(i));
 	  }
 
-	  tableDiv(1);
-	  tableDiv(2); //d3.select('#phenology-div-1').text('phenology chart 1')
-	  //d3.select('#phenology-div-2').text('phenology chart 2')
-	  //const d1 = d3.select(sel).append('div')
+	  tableDiv(1, true);
+	  tableDiv(2, false); // Div for combined display
+
+	  var tabDiv = div.append('div');
+	  tabDiv.style('display', 'none');
+	  tabDiv.attr('id', "phenology-div-combine");
+	  tabDiv.append('h4').attr('id', "phenology-name-combine");
+	  tabDiv.append('p').attr('id', "phenology-message-combine");
+	  tabDiv.append('div').attr('id', "phenology-chart-combine");
 	}
 	function tabSelected$1() {
-	  var _loop = function _loop(i) {
+	  for (var i = 0; i < 2; i++) {
 	    // Warn if data selected but the necessary config is not set
 	    if (data[i] && data[i].fields && (!data[i].fields.taxon || !data[i].fields.date)) {
-	      d3__namespace.select("#phenology-message-".concat(i + 1)).html("\n        To see phenology charts, both <i>taxon</i> and <i>date</i> fields must be configured.\n      ");
+	      d3__namespace.select("#summary-message-".concat(i)).style('display', '');
+	      showMessage(i + 1, "To see phenology charts for dataset ".concat(i + 1, ", both <i>taxon</i> and <i>date</i> fields must be configured."));
 	    } else {
-	      d3__namespace.select("#phenology-message-".concat(i + 1)).html('blah');
-	    } // Generate penology data if not already exists and all the necessary config is set
-
-
-	    if (!phenData[i] && data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.taxon) {
-	      phenData[i] = [];
-	      data[i].json.forEach(function (r) {
-	        var date = r[data[i].fields.date];
-	        var taxon = r[data[i].fields.taxon];
-
-	        if (date && taxon && dateValid(date)) {
-	          var week = dateWeek(date);
-	          var pd = phenData[i].find(function (pd) {
-	            return pd.taxon === taxon && pd.week === week;
-	          });
-
-	          if (pd) {
-	            pd.count = pd.count + 1;
-	          } else {
-	            phenData[i].push({
-	              taxon: taxon,
-	              week: week,
-	              count: 1
-	            });
-	          }
-	        }
-	      });
-	      console.log("phen data", phenData[i]);
+	      showMessage(i + 1, null);
 	    }
+	  }
+
+	  displayData();
+	}
+	function dataCleared$1(i) {
+	  clear$1(i);
+	}
+	function fieldConfigCleared$1(i) {
+	  clear$1(i);
+	} // Exported from the library to use from html interface
+
+	function phenologyDisplay() {
+	  // Function responsible for display one or both charts
+	  dChecked[0] = d3__namespace.select('#phenology-check-1').property("checked");
+	  dChecked[1] = d3__namespace.select('#phenology-check-2').property("checked");
+	  dChecked[2] = d3__namespace.select("#phenology-check-combine").property('checked');
+
+	  if (dChecked[2] && dChecked[0] && dChecked[1]) {
+	    d3__namespace.select('#phenology-div-combine').style("display", "");
+	    d3__namespace.select('#phenology-div-1').style("display", "none");
+	    d3__namespace.select('#phenology-div-2').style("display", "none");
+	  } else {
+	    d3__namespace.select('#phenology-div-combine').style("display", "none");
+
+	    if (dChecked[0] && dChecked[1]) {
+	      d3__namespace.select('#phenology-div-1').classed("split", true);
+	      d3__namespace.select('#phenology-div-2').classed("split", true);
+	    } else {
+	      d3__namespace.select('#phenology-div-1').classed("split", false);
+	      d3__namespace.select('#phenology-div-2').classed("split", false);
+	    }
+
+	    if (dChecked[0]) {
+	      d3__namespace.select('#phenology-div-1').style("display", "");
+	    } else {
+	      d3__namespace.select('#phenology-div-1').style("display", "none");
+	    }
+
+	    if (dChecked[1]) {
+	      d3__namespace.select('#phenology-div-2').style("display", "");
+	    } else {
+	      d3__namespace.select('#phenology-div-2').style("display", "none");
+	    }
+	  }
+
+	  displayData();
+	} // Helper functions
+
+	function clear$1(i) {
+	  phenData[i - 1] = null;
+	  phenData[2] = null; // Combined data
+
+	  d3__namespace.select("#phenology-chart-".concat(i)).html('');
+	  d3__namespace.select("#phenology-chart-combine").html('');
+	}
+
+	function displayData() {
+	  var pLoads = [];
+
+	  var _loop = function _loop(i) {
+	    var p = void 0; // Generate penology data if not already exists and all the necessary config is set
+
+	    if (dChecked[i] && data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.date) {
+	      if (phenData[i]) {
+	        makeChart(i);
+	        p = Promise.resolve();
+	      } else {
+	        showMessage(i + 1, "<span style='color: orange; font-weight: bold'>Configuring data for phenology display...</span>");
+	        setTimeout(function () {
+	          // Timeout required to allow GUI to update (i.e. phenology tab to show)
+	          p = loadData(i).then(function () {
+	            showMessage(i + 1, null);
+	            makeChart(i);
+	          });
+	        }, 1);
+	      }
+	    } else {
+	      p = Promise.resolve();
+	    }
+
+	    pLoads.push(p);
 	  };
 
 	  for (var i = 0; i < 2; i++) {
 	    _loop(i);
 	  }
+
+	  Promise.all(pLoads).then(function () {
+	    console.log("promises resolved"); // If combine display box is checked
+
+	    if (dChecked[2]) {
+	      if (phenData[2]) {
+	        makeChart(2);
+	      } else {
+	        showMessage('combine', "<span style='color: orange; font-weight: bold'>Configuring data for combined phenology display...</span>");
+	        setTimeout(function () {
+	          combineData();
+	          if (phenData[2]) makeChart(2);
+	          showMessage('combine', null);
+	        }, 1);
+	      }
+	    }
+	  });
 	}
-	function dataCleared$1(i) {}
-	function fieldConfigCleared$1(i) {} // Exported from the library to use from html interface
 
-	function phenologyDisplay() {
-	  // Function responsible for display one or both charts
-	  var d1 = d3__namespace.select('#phenology-check-1').property("checked");
-	  var d2 = d3__namespace.select('#phenology-check-2').property("checked");
-
-	  if (d1 && d2) {
-	    d3__namespace.select('#phenology-div-1').classed("split", true);
-	    d3__namespace.select('#phenology-div-2').classed("split", true);
+	function showMessage(i, html) {
+	  if (html) {
+	    d3__namespace.select("#phenology-message-".concat(i)).style('display', '');
+	    d3__namespace.select("#phenology-message-".concat(i)).html(html);
 	  } else {
-	    d3__namespace.select('#phenology-div-1').classed("split", false);
-	    d3__namespace.select('#phenology-div-2').classed("split", false);
+	    d3__namespace.select("#phenology-message-".concat(i)).style('display', 'none');
+	    d3__namespace.select("#phenology-message-".concat(i)).html('');
+	  }
+	}
+
+	function loadData(i) {
+	  phenData[i] = []; // Data generation is wrapped in a promise so that the interface will
+	  // not hang.
+
+	  return new Promise(function (resolve, reject) {
+	    data[i].json.forEach(function (r) {
+	      var date = r[data[i].fields.date];
+	      var taxon = r[data[i].fields.taxon];
+
+	      if (date && taxon && dateValid(date)) {
+	        var week = dateWeek(date);
+	        var pd = phenData[i].find(function (pd) {
+	          return pd.taxon === taxon && pd.week === week;
+	        });
+
+	        if (pd) {
+	          pd.count = pd.count + 1;
+	        } else {
+	          phenData[i].push({
+	            taxon: taxon,
+	            week: week,
+	            count: 1
+	          });
+	        }
+
+	        resolve();
+	      } else {
+	        reject();
+	      }
+	    });
+	  });
+	}
+
+	function combineData() {
+	  if (phenData[0] && phenData[1]) {
+	    // Combine the data into a single collection
+	    phenData[2] = phenData[0].map(function (pd) {
+	      return _objectSpread2(_objectSpread2({}, pd), {}, {
+	        count1: null
+	      });
+	    });
+	    phenData[1].forEach(function (pd1) {
+	      var pdcmatch = phenData[2].find(function (pdc) {
+	        return pdc.taxon === pd1.taxon && pdc.week === pd1.week;
+	      });
+
+	      if (pdcmatch) {
+	        pdcmatch.count1 = pd1.count;
+	      } else {
+	        phenData[2].push({
+	          taxon: pd1.taxon,
+	          week: pd1.week,
+	          count: null,
+	          count1: pd1.count
+	        });
+	      }
+	    });
+	  }
+	}
+
+	function makeChart(i) {
+	  var perRow = 4;
+
+	  if (dChecked[0] && dChecked[1] && !dChecked[2]) {
+	    perRow = 2;
 	  }
 
-	  if (d1) {
-	    d3__namespace.select('#phenology-div-1').style("display", "");
+	  var ytype = d3__namespace.select('input[name=rad-phen-count-type]:checked').property('value');
+	  var metrics, selector;
+
+	  if (i < 2) {
+	    selector = "#phenology-chart-".concat(i + 1);
+	    metrics = [{
+	      prop: 'count',
+	      label: data[i].name,
+	      colour: '#4188A3'
+	    }];
 	  } else {
-	    d3__namespace.select('#phenology-div-1').style("display", "none");
+	    selector = "#phenology-chart-combine";
+	    metrics = [{
+	      prop: 'count',
+	      label: data[0].name,
+	      colour: '#4188A3'
+	    }, {
+	      prop: 'count1',
+	      label: data[1].name,
+	      colour: 'red'
+	    }];
 	  }
 
-	  if (d2) {
-	    d3__namespace.select('#phenology-div-2').style("display", "");
+	  var taxonFilter = d3__namespace.select('#phenology-filter').property('value');
+	  var taxaFiltered;
+	  var taxa = phenData[i].map(function (tw) {
+	    return tw.taxon;
+	  });
+
+	  var uniqueTaxa = _toConsumableArray(new Set(taxa)).sort();
+
+	  if (taxonFilter) {
+	    taxaFiltered = uniqueTaxa.filter(function (taxon) {
+	      return taxon.toLowerCase().includes(taxonFilter.toLowerCase());
+	    });
 	  } else {
-	    d3__namespace.select('#phenology-div-2').style("display", "none");
+	    taxaFiltered = uniqueTaxa;
 	  }
+
+	  if (perRow !== currentPerRow[i] || !d3__namespace.select(selector).html().length || taxonFilter !== currentTaxonFilter[i] || currentYtype[i] !== ytype) {
+	    // Either this chart has not yet been generated or
+	    // the perRow value has changed.
+	    d3__namespace.select(selector).html('');
+	    var opts = {
+	      selector: selector,
+	      data: phenData[i],
+	      taxa: taxaFiltered,
+	      metrics: metrics,
+	      taxonLabelItalics: true,
+	      taxonLabelFontSize: 11,
+	      legendFontSize: 14,
+	      width: 350,
+	      height: 220,
+	      perRow: perRow,
+	      expand: true,
+	      axisLeft: 'tick',
+	      axisBottom: 'tick',
+	      axisRight: 'on',
+	      axisTop: 'on',
+	      ytype: ytype,
+	      interactivity: ''
+	    };
+	    showMessage(i === 2 ? 'combine' : i + 1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>");
+	    setTimeout(function () {
+	      window.brccharts.phen1(opts);
+	      showMessage(i === 2 ? 'combine' : i + 1, null);
+	    }, 1);
+	  }
+
+	  currentPerRow[i] = perRow;
+	  currentTaxonFilter[i] = taxonFilter;
+	  currentYtype[i] = ytype;
 	}
 
 	var phenology = /*#__PURE__*/Object.freeze({
@@ -10874,7 +11166,6 @@
 		mapoverviewDisplay: mapoverviewDisplay
 	});
 
-	console.log('dateFormat', dateformat);
 	var dateFormats = [{
 	  re: /^\d\d\d\d.\d\d.\d\d$/,
 	  fnYear: function fnYear(date) {
@@ -10885,7 +11176,7 @@
 	    var month = date.substr(5, 2);
 	    var day = date.substr(8, 2);
 	    var dte = new Date(year, month, day);
-	    return dateformat(dte, 'W');
+	    return Number(dateformat(dte, 'W'));
 	  }
 	}, {
 	  re: /^\d\d.\d\d.\d\d\d\d$/,
@@ -10897,7 +11188,7 @@
 	    var month = date.substr(3, 2);
 	    var day = date.substr(0, 2);
 	    var dte = new Date(year, month, day);
-	    return dateformat(dte, 'W');
+	    return Number(dateformat(dte, 'W'));
 	  }
 	}];
 	var data = [{}, {}];
@@ -10943,7 +11234,7 @@
 	  id: 'source',
 	  caption: 'Source'
 	}];
-	function datasetCheckboxes(sel, prefix, fn) {
+	function datasetCheckboxes(sel, prefix, fn, combineButton) {
 	  // Generic control to switch between datasets
 	  function makeCheckBox(id, checked) {
 	    var input = fldset.append('input');
@@ -10964,11 +11255,20 @@
 	  legend.text('Display dataset');
 	  makeCheckBox(1, true);
 	  makeCheckBox(2, false);
+
+	  if (combineButton) {
+	    var input = fldset.append('input');
+	    input.style('margin-left', '2em');
+	    input.attr('type', 'checkbox');
+	    input.attr('id', "".concat(prefix, "-combine"));
+	    input.attr('onclick', "brcdseval.".concat(fn, "()"));
+	    fldset.append('label').text("Combine display");
+	  }
 	}
 	function dateValid(date) {
 	  return dateFormats.some(function (df) {
 	    return df.re.test(date);
-	  }); //return /^\d\d\d\d.\d\d.\d\d$/.test(date) || /^\d\d.\d\d.\d\d\d\d$/.test(date)
+	  });
 	}
 	function dateYear(date) {
 	  var df = dateFormats.find(function (df) {

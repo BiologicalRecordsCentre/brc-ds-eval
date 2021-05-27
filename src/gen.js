@@ -5,9 +5,6 @@ import * as summary from './summary'
 import * as phenology from './phenology'
 import * as mapoverview from './mapoverview'
 
-console.log('dateFormat', dateFormat)
-
-
 const dateFormats = [
   {
     re: /^\d\d\d\d.\d\d.\d\d$/,
@@ -17,7 +14,7 @@ const dateFormats = [
       const month = date.substr(5,2)
       const day = date.substr(8,2)
       const dte = new Date(year, month, day)
-      return dateFormat(dte, 'W')
+      return Number(dateFormat(dte, 'W'))
     }
   },
   {
@@ -28,7 +25,7 @@ const dateFormats = [
       const month = date.substr(3,2)
       const day = date.substr(0,2)
       const dte = new Date(year, month, day)
-      return dateFormat(dte, 'W')
+      return Number(dateFormat(dte, 'W'))
     }
   }
 ]
@@ -93,7 +90,7 @@ export const configFields = [
   },
 ]
 
-export function datasetCheckboxes(sel, prefix, fn) {
+export function datasetCheckboxes(sel, prefix, fn, combineButton) {
 
   // Generic control to switch between datasets
   function makeCheckBox (id, checked) {
@@ -113,12 +110,19 @@ export function datasetCheckboxes(sel, prefix, fn) {
   legend.text('Display dataset')
   makeCheckBox(1, true)
   makeCheckBox(2, false)
+
+  if (combineButton) {
+    const input = fldset.append('input')
+    input.style('margin-left', '2em')
+    input.attr('type', 'checkbox')
+    input.attr('id', `${prefix}-combine`)
+    input.attr('onclick', `brcdseval.${fn}()`)
+    fldset.append('label').text(`Combine display`)
+  }
 }
 
 export function dateValid(date) {
-
   return dateFormats.some(df => df.re.test(date))
-  //return /^\d\d\d\d.\d\d.\d\d$/.test(date) || /^\d\d.\d\d.\d\d\d\d$/.test(date)
 }
 
 export function dateYear(date) {
