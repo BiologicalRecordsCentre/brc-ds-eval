@@ -3,7 +3,7 @@ import * as gen from './gen'
 import { getLowerResGrs, checkGr } from 'brc-atlas-bigr'
 //import bigr from 'brc-atlas-bigr'
 
-let maps = [null, null], taxa = [null, null]
+let maps = [null, null]
 
 // Standard interface functions
 export function gui(sel) {
@@ -14,16 +14,7 @@ export function gui(sel) {
     div.classed('split2', true)
     div.append('h4').attr('id', `overviewmap-name-${i}`)
     const p = div.append('p')
-    const input = p.append('input')
-    input.attr('id', `overviewmap-taxon-${i}`)
-    input.attr('list', `overviewmap-datalist-${i}`)
-    input.attr('onfocus', `brcdseval.mapoverviewClearMap(${i}, this)`)
-    input.attr('placeholder', 'Start typing taxon...')
-    const datalist = p.append('datalist')
-    datalist.attr('id', `overviewmap-datalist-${i}`)
-    datalist.attr('autocomplete', 'on')
-    const button = p.append('button').text('Map')
-    button.attr('onclick', `brcdseval.mapoverviewMap(${i})`)
+    gen.taxonSelectionControl(p, i, 'overviewmap', 'brcdseval.mapoverviewClearMap', 'brcdseval.mapoverviewMap', 'Map')
     div.append('p').attr('id', `overviewmap-message-${i}`)
     div.append('div').attr('id', `overviewmap-container-${i}`)
   }
@@ -55,22 +46,11 @@ export function tabSelected() {
           mapTypesSel: {hectad: genHecatdMap},
           mapTypesKey: 'hectad'
         })
-
         // Create taxon selection list
-        const tf = gen.data[i-1].fields.taxon
-        taxa[i-1] = []
-        gen.data[i-1].json.forEach(r => {
-          if (taxa[i-1].indexOf(r[tf]) === -1) {
-            taxa[i-1].push(r[tf])
-          }
-        })
-        taxa[i-1].sort().forEach(t => {
-          d3.select(`#overviewmap-datalist-${i}`).append('option').text(t)
-        })
+        gen.populateTaxonSelectionControl(i, 'overviewmap')
       }
       d3.select(`#overviewmap-div-${i}`).style("display", maps[i-1] ? "" : "none")
       d3.select(`#overviewmap-name-${i}`).text(gen.data[i-1].name)
-      console.log('taxa',taxa)
     }
   }
   checkMap(1)
@@ -94,7 +74,6 @@ export function mapoverviewMap(i) {
 
 export function clear(i) {
   maps[i-1] = null
-  taxa[i-1] = null
   d3.select(`#overviewmap-container-${i}`).html('')
 }
 

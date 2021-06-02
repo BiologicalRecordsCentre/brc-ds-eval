@@ -8942,7 +8942,7 @@
 	  d3__namespace.select('#jnccLoading').text('failed to load').style('color', 'red');
 	}); // Standard interface functions
 
-	function gui$3(sel) {
+	function gui$4(sel) {
 	  // Background downloading of resources
 	  d3__namespace.select(sel).append('h3').text('Packaged resources');
 	  d3__namespace.select(sel).append('p').text("\n    These resources are packaged with the tool, you can carry on \n    specifying your local CSV datasets whilst these are downloading.\n  ");
@@ -8998,13 +8998,13 @@
 	  splitDiv(1);
 	  splitDiv(2);
 	}
-	function tabSelected$3() {}
-	function dataCleared$3(i) {
+	function tabSelected$4() {}
+	function dataCleared$4(i) {
 	  d3__namespace.select("#csvLoading".concat(i)).html('No file loaded');
 	  d3__namespace.select("#csvLoading".concat(i)).style('color', 'red');
 	  setFieldDropdowns(i);
 	}
-	function fieldConfigCleared$3(i) {
+	function fieldConfigCleared$4(i) {
 	  d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', false);
 	  d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', false);
 	  d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', true);
@@ -9146,10 +9146,10 @@
 
 	var load = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		gui: gui$3,
-		tabSelected: tabSelected$3,
-		dataCleared: dataCleared$3,
-		fieldConfigCleared: fieldConfigCleared$3,
+		gui: gui$4,
+		tabSelected: tabSelected$4,
+		dataCleared: dataCleared$4,
+		fieldConfigCleared: fieldConfigCleared$4,
 		fileOpened: fileOpened,
 		setFieldConfig: setFieldConfig,
 		clearFieldConfig: clearFieldConfig
@@ -10427,7 +10427,7 @@
 
 	var summary = [null, null]; // Standard interface functions
 
-	function gui$2(sel) {
+	function gui$3(sel) {
 	  // Dataset checkboxes
 	  datasetCheckboxes(sel, 'summary-check', 'summaryDisplay'); // Record grouping
 
@@ -10470,19 +10470,19 @@
 	  tableDiv(1);
 	  tableDiv(2);
 	}
-	function tabSelected$2() {
+	function tabSelected$3() {
 	  summariesTables();
 	}
-	function dataCleared$2(i) {
-	  clear$2(i);
+	function dataCleared$3(i) {
+	  clear$3(i);
 	}
-	function fieldConfigCleared$2(i) {
-	  clear$2(i);
+	function fieldConfigCleared$3(i) {
+	  clear$3(i);
 	} // Exported from the library to use from html interface
 
 	function redoSummaries() {
-	  clear$2(1);
-	  clear$2(2);
+	  clear$3(1);
+	  clear$3(2);
 	  summariesTables();
 	}
 	function summaryDisplay() {
@@ -10644,7 +10644,7 @@
 	  generate(2);
 	}
 
-	function clear$2(i) {
+	function clear$3(i) {
 	  if (summary[i - 1]) {
 	    summary[i - 1].destroy();
 	    summary[i - 1] = null;
@@ -10654,54 +10654,40 @@
 
 	var summary$1 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		gui: gui$2,
-		tabSelected: tabSelected$2,
-		dataCleared: dataCleared$2,
-		fieldConfigCleared: fieldConfigCleared$2,
+		gui: gui$3,
+		tabSelected: tabSelected$3,
+		dataCleared: dataCleared$3,
+		fieldConfigCleared: fieldConfigCleared$3,
 		redoSummaries: redoSummaries,
 		summaryDisplay: summaryDisplay
 	});
 
 	var phenData = [null, null, null];
-	var dChecked = [true, false, false];
-	var currentPerRow = [0, 0, 0];
-	var currentTaxonFilter = ['', '', ''];
-	var currentYtype = ['', '', '']; // Standard interface functions
+	var dChecked$1 = [true, false, false];
+	var currentPerRow$1 = [0, 0, 0];
+	var currentTaxonFilter$1 = ['', '', ''];
+	var currentYtype$1 = ['', '', '']; // Standard interface functions
 
-	function gui$1(sel) {
-	  datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay', true); // Layout for summary tables
+	function gui$2(sel) {
+	  datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay', true); // Layout for phenology charts
 
 	  var div = d3__namespace.select(sel).append('div');
 	  var fldset = div.append('fieldset');
 	  fldset.append('legend').text('Phenology chart options');
 	  fldset.style('margin-top', '0.5em'); // Taxon filter
 
-	  var divTs = fldset.append('div');
-	  divTs.style('display', 'inline-block');
-	  var iTs = divTs.append('input');
-	  iTs.attr('id', 'phenology-filter');
-	  iTs.attr('placeholder', 'Enter a filter for taxa');
-	  var bTs = divTs.append('button');
-	  bTs.text('Apply');
-	  bTs.attr('onclick', 'brcdseval.phenologyDisplay()'); // Proportions vs counts radio buttons
+	  textInput(fldset, 'phenology-filter', 'Enter a filter for taxa', 'brcdseval.phenologyDisplay', 'Apply'); // Proportions vs counts radio buttons
 
-	  function makeRadio(type, label, checked) {
-	    var rad = divRads.append('input');
-	    rad.attr('type', 'radio');
-	    rad.attr('id', "rad-phen-count-".concat(type));
-	    rad.attr('name', 'rad-phen-count-type');
-	    rad.attr('value', type);
-	    rad.attr('onclick', "brcdseval.phenologyDisplay()");
-	    rad.property('checked', checked);
-	    var radlab = divRads.append('label').text(label);
-	    radlab.attr('for', "rad-phen-count-".concat(type));
-	  }
-
-	  var divRads = fldset.append('div');
-	  divRads.style('margin-left', '1em');
-	  divRads.style('display', 'inline-block');
-	  makeRadio('count', 'Record counts', true);
-	  makeRadio('proportion', 'Proporation of record counts', false);
+	  var radios = [{
+	    value: 'count',
+	    label: 'Record counts',
+	    checked: true
+	  }, {
+	    value: 'proportion',
+	    label: 'Proporation of record counts',
+	    checked: false
+	  }];
+	  radioButtonSet(fldset, 'rad-phen-count-type', 'rad-phen-count', 'brcdseval.phenologyDisplay', radios);
 
 	  function tableDiv(i, initDisplay) {
 	    var tabDiv = div.append('div');
@@ -10726,40 +10712,40 @@
 	  tabDiv.append('p').attr('id', "phenology-message-combine");
 	  tabDiv.append('div').attr('id', "phenology-chart-combine");
 	}
-	function tabSelected$1() {
+	function tabSelected$2() {
 	  for (var i = 0; i < 2; i++) {
 	    // Warn if data selected but the necessary config is not set
 	    if (data[i] && data[i].fields && (!data[i].fields.taxon || !data[i].fields.date)) {
 	      d3__namespace.select("#summary-message-".concat(i)).style('display', '');
-	      showMessage(i + 1, "To see phenology charts for dataset ".concat(i + 1, ", both <i>taxon</i> and <i>date</i> fields must be configured."));
+	      showMessage$1(i + 1, "To see phenology charts for dataset ".concat(i + 1, ", both <i>taxon</i> and <i>date</i> fields must be configured."));
 	    } else {
-	      showMessage(i + 1, null);
+	      showMessage$1(i + 1, null);
 	    }
 	  }
 
-	  displayData();
+	  displayData$1();
 	}
-	function dataCleared$1(i) {
-	  clear$1(i);
+	function dataCleared$2(i) {
+	  clear$2(i);
 	}
-	function fieldConfigCleared$1(i) {
-	  clear$1(i);
+	function fieldConfigCleared$2(i) {
+	  clear$2(i);
 	} // Exported from the library to use from html interface
 
 	function phenologyDisplay() {
 	  // Function responsible for display one or both charts
-	  dChecked[0] = d3__namespace.select('#phenology-check-1').property("checked");
-	  dChecked[1] = d3__namespace.select('#phenology-check-2').property("checked");
-	  dChecked[2] = d3__namespace.select("#phenology-check-combine").property('checked');
+	  dChecked$1[0] = d3__namespace.select('#phenology-check-1').property("checked");
+	  dChecked$1[1] = d3__namespace.select('#phenology-check-2').property("checked");
+	  dChecked$1[2] = d3__namespace.select("#phenology-check-combine").property('checked');
 
-	  if (dChecked[2] && dChecked[0] && dChecked[1]) {
+	  if (dChecked$1[2] && dChecked$1[0] && dChecked$1[1]) {
 	    d3__namespace.select('#phenology-div-combine').style("display", "");
 	    d3__namespace.select('#phenology-div-1').style("display", "none");
 	    d3__namespace.select('#phenology-div-2').style("display", "none");
 	  } else {
 	    d3__namespace.select('#phenology-div-combine').style("display", "none");
 
-	    if (dChecked[0] && dChecked[1]) {
+	    if (dChecked$1[0] && dChecked$1[1]) {
 	      d3__namespace.select('#phenology-div-1').classed("split", true);
 	      d3__namespace.select('#phenology-div-2').classed("split", true);
 	    } else {
@@ -10767,23 +10753,23 @@
 	      d3__namespace.select('#phenology-div-2').classed("split", false);
 	    }
 
-	    if (dChecked[0]) {
+	    if (dChecked$1[0]) {
 	      d3__namespace.select('#phenology-div-1').style("display", "");
 	    } else {
 	      d3__namespace.select('#phenology-div-1').style("display", "none");
 	    }
 
-	    if (dChecked[1]) {
+	    if (dChecked$1[1]) {
 	      d3__namespace.select('#phenology-div-2').style("display", "");
 	    } else {
 	      d3__namespace.select('#phenology-div-2').style("display", "none");
 	    }
 	  }
 
-	  displayData();
+	  displayData$1();
 	} // Helper functions
 
-	function clear$1(i) {
+	function clear$2(i) {
 	  phenData[i - 1] = null;
 	  phenData[2] = null; // Combined data
 
@@ -10791,23 +10777,23 @@
 	  d3__namespace.select("#phenology-chart-combine").html('');
 	}
 
-	function displayData() {
+	function displayData$1() {
 	  var pLoads = [];
 
 	  var _loop = function _loop(i) {
 	    var p = void 0; // Generate penology data if not already exists and all the necessary config is set
 
-	    if (dChecked[i] && data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.date) {
+	    if (dChecked$1[i] && data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.date) {
 	      if (phenData[i]) {
-	        makeChart(i);
+	        makeChart$1(i);
 	        p = Promise.resolve();
 	      } else {
-	        showMessage(i + 1, "<span style='color: orange; font-weight: bold'>Configuring data for phenology display...</span>");
+	        showMessage$1(i + 1, "<span style='color: orange; font-weight: bold'>Configuring data for phenology display...</span>");
 	        setTimeout(function () {
 	          // Timeout required to allow GUI to update (i.e. phenology tab to show)
-	          p = loadData(i).then(function () {
-	            showMessage(i + 1, null);
-	            makeChart(i);
+	          p = loadData$1(i).then(function () {
+	            showMessage$1(i + 1, null);
+	            makeChart$1(i);
 	          });
 	        }, 1);
 	      }
@@ -10825,22 +10811,22 @@
 	  Promise.all(pLoads).then(function () {
 	    console.log("promises resolved"); // If combine display box is checked
 
-	    if (dChecked[2]) {
+	    if (dChecked$1[2]) {
 	      if (phenData[2]) {
-	        makeChart(2);
+	        makeChart$1(2);
 	      } else {
-	        showMessage('combine', "<span style='color: orange; font-weight: bold'>Configuring data for combined phenology display...</span>");
+	        showMessage$1('combine', "<span style='color: orange; font-weight: bold'>Configuring data for combined phenology display...</span>");
 	        setTimeout(function () {
-	          combineData();
-	          if (phenData[2]) makeChart(2);
-	          showMessage('combine', null);
+	          combineData$1();
+	          if (phenData[2]) makeChart$1(2);
+	          showMessage$1('combine', null);
 	        }, 1);
 	      }
 	    }
 	  });
 	}
 
-	function showMessage(i, html) {
+	function showMessage$1(i, html) {
 	  if (html) {
 	    d3__namespace.select("#phenology-message-".concat(i)).style('display', '');
 	    d3__namespace.select("#phenology-message-".concat(i)).html(html);
@@ -10850,7 +10836,7 @@
 	  }
 	}
 
-	function loadData(i) {
+	function loadData$1(i) {
 	  phenData[i] = []; // Data generation is wrapped in a promise so that the interface will
 	  // not hang.
 
@@ -10883,7 +10869,7 @@
 	  });
 	}
 
-	function combineData() {
+	function combineData$1() {
 	  if (phenData[0] && phenData[1]) {
 	    // Combine the data into a single collection
 	    phenData[2] = phenData[0].map(function (pd) {
@@ -10910,10 +10896,10 @@
 	  }
 	}
 
-	function makeChart(i) {
+	function makeChart$1(i) {
 	  var perRow = 4;
 
-	  if (dChecked[0] && dChecked[1] && !dChecked[2]) {
+	  if (dChecked$1[0] && dChecked$1[1] && !dChecked$1[2]) {
 	    perRow = 2;
 	  }
 
@@ -10956,7 +10942,7 @@
 	    taxaFiltered = uniqueTaxa;
 	  }
 
-	  if (perRow !== currentPerRow[i] || !d3__namespace.select(selector).html().length || taxonFilter !== currentTaxonFilter[i] || currentYtype[i] !== ytype) {
+	  if (perRow !== currentPerRow$1[i] || !d3__namespace.select(selector).html().length || taxonFilter !== currentTaxonFilter$1[i] || currentYtype$1[i] !== ytype) {
 	    // Either this chart has not yet been generated or
 	    // the perRow value has changed.
 	    d3__namespace.select(selector).html('');
@@ -10979,47 +10965,37 @@
 	      ytype: ytype,
 	      interactivity: ''
 	    };
-	    showMessage(i === 2 ? 'combine' : i + 1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>");
+	    showMessage$1(i === 2 ? 'combine' : i + 1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>");
 	    setTimeout(function () {
 	      window.brccharts.phen1(opts);
-	      showMessage(i === 2 ? 'combine' : i + 1, null);
+	      showMessage$1(i === 2 ? 'combine' : i + 1, null);
 	    }, 1);
 	  }
 
-	  currentPerRow[i] = perRow;
-	  currentTaxonFilter[i] = taxonFilter;
-	  currentYtype[i] = ytype;
+	  currentPerRow$1[i] = perRow;
+	  currentTaxonFilter$1[i] = taxonFilter;
+	  currentYtype$1[i] = ytype;
 	}
 
 	var phenology = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		gui: gui$1,
-		tabSelected: tabSelected$1,
-		dataCleared: dataCleared$1,
-		fieldConfigCleared: fieldConfigCleared$1,
+		gui: gui$2,
+		tabSelected: tabSelected$2,
+		dataCleared: dataCleared$2,
+		fieldConfigCleared: fieldConfigCleared$2,
 		phenologyDisplay: phenologyDisplay
 	});
 
-	var maps = [null, null],
-	    taxa = [null, null]; // Standard interface functions
+	var maps = [null, null]; // Standard interface functions
 
-	function gui(sel) {
+	function gui$1(sel) {
 	  function makeMapDiv(i) {
 	    var div = d3__namespace.select(sel).append('div');
 	    div.attr('id', "overviewmap-div-".concat(i));
 	    div.classed('split2', true);
 	    div.append('h4').attr('id', "overviewmap-name-".concat(i));
 	    var p = div.append('p');
-	    var input = p.append('input');
-	    input.attr('id', "overviewmap-taxon-".concat(i));
-	    input.attr('list', "overviewmap-datalist-".concat(i));
-	    input.attr('onfocus', "brcdseval.mapoverviewClearMap(".concat(i, ", this)"));
-	    input.attr('placeholder', 'Start typing taxon...');
-	    var datalist = p.append('datalist');
-	    datalist.attr('id', "overviewmap-datalist-".concat(i));
-	    datalist.attr('autocomplete', 'on');
-	    var button = p.append('button').text('Map');
-	    button.attr('onclick', "brcdseval.mapoverviewMap(".concat(i, ")"));
+	    taxonSelectionControl(p, i, 'overviewmap', 'brcdseval.mapoverviewClearMap', 'brcdseval.mapoverviewMap', 'Map');
 	    div.append('p').attr('id', "overviewmap-message-".concat(i));
 	    div.append('div').attr('id', "overviewmap-container-".concat(i));
 	  }
@@ -11027,7 +11003,7 @@
 	  makeMapDiv(1);
 	  makeMapDiv(2);
 	}
-	function tabSelected() {
+	function tabSelected$1() {
 	  var checkMap = function checkMap(i) {
 	    if (data[i - 1].fields && (!data[i - 1].fields.gr || !data[i - 1].fields.taxon)) {
 	      d3__namespace.select("#overviewmap-message-".concat(i)).html("\n          For the overview map, you must configure both the <i>Taxon</i> and <i>Grid ref</i> columns.\n        ");
@@ -11049,32 +11025,22 @@
 	          mapTypesKey: 'hectad'
 	        }); // Create taxon selection list
 
-	        var tf = data[i - 1].fields.taxon;
-	        taxa[i - 1] = [];
-	        data[i - 1].json.forEach(function (r) {
-	          if (taxa[i - 1].indexOf(r[tf]) === -1) {
-	            taxa[i - 1].push(r[tf]);
-	          }
-	        });
-	        taxa[i - 1].sort().forEach(function (t) {
-	          d3__namespace.select("#overviewmap-datalist-".concat(i)).append('option').text(t);
-	        });
+	        populateTaxonSelectionControl(i, 'overviewmap');
 	      }
 
 	      d3__namespace.select("#overviewmap-div-".concat(i)).style("display", maps[i - 1] ? "" : "none");
 	      d3__namespace.select("#overviewmap-name-".concat(i)).text(data[i - 1].name);
-	      console.log('taxa', taxa);
 	    }
 	  };
 
 	  checkMap(1);
 	  checkMap(2);
 	}
-	function dataCleared(i) {
-	  clear(i);
+	function dataCleared$1(i) {
+	  clear$1(i);
 	}
-	function fieldConfigCleared(i) {
-	  clear(i);
+	function fieldConfigCleared$1(i) {
+	  clear$1(i);
 	} // Exported from the library to use from html interface
 
 	function mapoverviewMap(i) {
@@ -11085,9 +11051,8 @@
 	  });
 	  maps[i - 1].redrawMap();
 	}
-	function clear(i) {
+	function clear$1(i) {
 	  maps[i - 1] = null;
-	  taxa[i - 1] = null;
 	  d3__namespace.select("#overviewmap-container-".concat(i)).html('');
 	}
 	function mapoverviewClearMap(i, input) {
@@ -11156,14 +11121,334 @@
 
 	var mapoverview = /*#__PURE__*/Object.freeze({
 		__proto__: null,
+		gui: gui$1,
+		tabSelected: tabSelected$1,
+		dataCleared: dataCleared$1,
+		fieldConfigCleared: fieldConfigCleared$1,
+		mapoverviewMap: mapoverviewMap,
+		clear: clear$1,
+		mapoverviewClearMap: mapoverviewClearMap,
+		mapoverviewDisplay: mapoverviewDisplay
+	});
+
+	var timeData = [null, null, null];
+	var dChecked = [true, false, false];
+	var currentPerRow = [0, 0, 0];
+	var currentTaxonFilter = ['', '', ''];
+	var currentYtype = ['', '', '']; // Standard interface functions
+
+	function gui(sel) {
+	  datasetCheckboxes(sel, 'timeseries-check', 'timeseriesDisplay', true); // Layout for time series charts
+
+	  var div = d3__namespace.select(sel).append('div');
+	  var fldset = div.append('fieldset');
+	  fldset.append('legend').text('Time series chart options');
+	  fldset.style('margin-top', '0.5em'); // Taxon filter
+
+	  textInput(fldset, 'timeseries-filter', 'Enter a filter for taxa', 'brcdseval.timeseriesDisplay', 'Apply'); // Records vs visits radio buttons
+
+	  var radios = [{
+	    value: 'count',
+	    label: 'Record counts',
+	    checked: true
+	  }, {
+	    value: 'visit',
+	    label: 'Unique visits',
+	    checked: false
+	  }];
+	  radioButtonSet(fldset, 'rad-timeseries-count-type', 'rad-timeseries-count', 'brcdseval.timeseriesDisplay', radios);
+
+	  function tableDiv(i, initDisplay) {
+	    var tabDiv = div.append('div');
+
+	    if (!initDisplay) {
+	      tabDiv.style('display', 'none');
+	    }
+
+	    tabDiv.attr('id', "timeseries-div-".concat(i));
+	    tabDiv.append('h4').attr('id', "timeseries-name-".concat(i));
+	    tabDiv.append('p').attr('id', "timeseries-message-".concat(i));
+	    tabDiv.append('div').attr('id', "timeseries-chart-".concat(i));
+	  }
+
+	  tableDiv(1, true);
+	  tableDiv(2, false); // Div for combined display
+
+	  var tabDiv = div.append('div');
+	  tabDiv.style('display', 'none');
+	  tabDiv.attr('id', "timeseries-div-combine");
+	  tabDiv.append('h4').attr('id', "timeseries-name-combine");
+	  tabDiv.append('p').attr('id', "timeseries-message-combine");
+	  tabDiv.append('div').attr('id', "timeseries-chart-combine");
+	}
+	function tabSelected() {
+	  for (var i = 0; i < 2; i++) {
+	    // Warn if data selected but the necessary config is not set
+	    if (data[i] && data[i].fields) {
+	      if (!data[i].fields.taxon || !data[i].fields.date) {
+	        d3__namespace.select("#summary-message-".concat(i)).style('display', '');
+	        showMessage(i + 1, "To see time series charts for dataset ".concat(i + 1, ", \n          both <i>taxon</i> and <i>date</i> fields must be configured.\n        "));
+	      } else if (!data[i].fields.gr) {
+	        d3__namespace.select("#summary-message-".concat(i)).style('display', '');
+	        showMessage(i + 1, "For 'visit' counts rather than 'record' counts on the Y axis, you also\n          need to configure the <i>grid ref</i> field for dataset ".concat(i + 1, ".\n        "));
+	      } else {
+	        showMessage(i + 1, null);
+	      }
+	    } else {
+	      showMessage(i + 1, null);
+	    }
+	  }
+
+	  displayData();
+	}
+	function dataCleared(i) {
+	  clear(i);
+	}
+	function fieldConfigCleared(i) {
+	  clear(i);
+	} // Exported from the library to use from html interface
+
+	function timeseriesDisplay() {
+	  // Function responsible for display one or both charts
+	  dChecked[0] = d3__namespace.select('#timeseries-check-1').property("checked");
+	  dChecked[1] = d3__namespace.select('#timeseries-check-2').property("checked");
+	  dChecked[2] = d3__namespace.select("#timeseries-check-combine").property('checked');
+
+	  if (dChecked[2] && dChecked[0] && dChecked[1]) {
+	    d3__namespace.select('#timeseries-div-combine').style("display", "");
+	    d3__namespace.select('#timeseries-div-1').style("display", "none");
+	    d3__namespace.select('#timeseries-div-2').style("display", "none");
+	  } else {
+	    d3__namespace.select('#timeseries-div-combine').style("display", "none");
+
+	    if (dChecked[0] && dChecked[1]) {
+	      d3__namespace.select('#timeseries-div-1').classed("split", true);
+	      d3__namespace.select('#timeseries-div-2').classed("split", true);
+	    } else {
+	      d3__namespace.select('#timeseries-div-1').classed("split", false);
+	      d3__namespace.select('#timeseries-div-2').classed("split", false);
+	    }
+
+	    if (dChecked[0]) {
+	      d3__namespace.select('#timeseries-div-1').style("display", "");
+	    } else {
+	      d3__namespace.select('#timeseries-div-1').style("display", "none");
+	    }
+
+	    if (dChecked[1]) {
+	      d3__namespace.select('#timeseries-div-2').style("display", "");
+	    } else {
+	      d3__namespace.select('#timeseries-div-2').style("display", "none");
+	    }
+	  }
+
+	  displayData();
+	} // Helper functions
+
+	function showMessage(i, html) {
+	  if (html) {
+	    d3__namespace.select("#timeseries-message-".concat(i)).style('display', '');
+	    d3__namespace.select("#timeseries-message-".concat(i)).html(html);
+	  } else {
+	    d3__namespace.select("#timeseries-message-".concat(i)).style('display', 'none');
+	    d3__namespace.select("#timeseries-message-".concat(i)).html('');
+	  }
+	}
+
+	function displayData() {
+	  console.log("Display time series stuff");
+	  var pLoads = [];
+
+	  var _loop = function _loop(i) {
+	    var p = void 0; // Generate time series data if not already exists and all the necessary config is set
+
+	    if (dChecked[i] && data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.date) {
+	      if (timeData[i]) {
+	        makeChart(i);
+	        p = Promise.resolve();
+	      } else {
+	        showMessage(i + 1, "<span style='color: orange; font-weight: bold'>Configuring data for time series display...</span>");
+	        setTimeout(function () {
+	          // Timeout required to allow GUI to update (i.e. time series tab to show)
+	          p = loadData(i).then(function () {
+	            showMessage(i + 1, null);
+	            makeChart(i);
+	          });
+	        }, 1);
+	      }
+	    } else {
+	      p = Promise.resolve();
+	    }
+
+	    pLoads.push(p);
+	  };
+
+	  for (var i = 0; i < 2; i++) {
+	    _loop(i);
+	  }
+
+	  Promise.all(pLoads).then(function () {
+	    console.log("promises resolved"); // If combine display box is checked
+
+	    if (dChecked[2]) {
+	      if (timeData[2]) {
+	        makeChart(2);
+	      } else {
+	        showMessage('combine', "<span style='color: orange; font-weight: bold'>Configuring data for combined time series display...</span>");
+	        setTimeout(function () {
+	          combineData();
+	          if (timeData[2]) makeChart(2);
+	          showMessage('combine', null);
+	        }, 1);
+	      }
+	    }
+	  });
+	}
+
+	function clear(i) {
+	  timeData[i - 1] = null;
+	  timeData[2] = null; // Combined data
+
+	  d3__namespace.select("#timeseries-chart-".concat(i)).html('');
+	  d3__namespace.select("#timeseries-chart-combine").html('');
+	}
+
+	function loadData(i) {
+	  timeData[i] = []; // Data generation is wrapped in a promise so that the interface will
+	  // not hang.
+
+	  return new Promise(function (resolve, reject) {
+	    data[i].json.forEach(function (r) {
+	      var date = r[data[i].fields.date];
+	      var taxon = r[data[i].fields.taxon]; //const gr = r[gen.data[i].fields.gr]
+
+	      if (date && taxon && dateValid(date)) {
+	        var year = dateYear(date);
+	        var pd = timeData[i].find(function (pd) {
+	          return pd.taxon === taxon && pd.year === year;
+	        });
+
+	        if (pd) {
+	          pd.count = pd.count + 1;
+	        } else {
+	          timeData[i].push({
+	            taxon: taxon,
+	            year: year,
+	            count: 1
+	          });
+	        }
+
+	        resolve();
+	      } else {
+	        reject();
+	      }
+	    });
+	  });
+	}
+
+	function combineData() {
+	  if (timeData[0] && timeData[1]) {
+	    // Combine the data into a single collection
+	    timeData[2] = timeData[0].map(function (ts) {
+	      return _objectSpread2(_objectSpread2({}, ts), {}, {
+	        count1: null
+	      });
+	    });
+	    timeData[1].forEach(function (ts1) {
+	      var tscmatch = timeData[2].find(function (tsc) {
+	        return tsc.taxon === ts1.taxon && tsc.year === ts1.year;
+	      });
+
+	      if (tscmatch) {
+	        tscmatch.count1 = ts1.count;
+	      } else {
+	        timeData[2].push({
+	          taxon: ts1.taxon,
+	          year: ts1.year,
+	          count: null,
+	          count1: ts1.count
+	        });
+	      }
+	    });
+	  }
+	}
+
+	function makeChart(i) {
+	  var perRow = 4;
+
+	  if (dChecked[0] && dChecked[1] && !dChecked[2]) {
+	    perRow = 2;
+	  }
+
+	  var ytype = d3__namespace.select('input[name=rad-timeseries-count-type]:checked').property('value');
+	  var selector;
+
+	  if (i < 2) {
+	    selector = "#timeseries-chart-".concat(i + 1);
+	  } else {
+	    selector = "#timeseries-chart-combine";
+	  }
+
+	  var taxonFilter = d3__namespace.select('#timeseries-filter').property('value');
+	  var taxaFiltered;
+	  var taxa = timeData[i].map(function (tw) {
+	    return tw.taxon;
+	  });
+
+	  var uniqueTaxa = _toConsumableArray(new Set(taxa)).sort();
+
+	  if (taxonFilter) {
+	    taxaFiltered = uniqueTaxa.filter(function (taxon) {
+	      return taxon.toLowerCase().includes(taxonFilter.toLowerCase());
+	    });
+	  } else {
+	    taxaFiltered = uniqueTaxa;
+	  }
+
+	  if (perRow !== currentPerRow[i] || !d3__namespace.select(selector).html().length || taxonFilter !== currentTaxonFilter[i] || currentYtype[i] !== ytype) {
+	    // Either this chart has not yet been generated or
+	    // the perRow value has changed.
+	    d3__namespace.select(selector).html('');
+	    var opts = {
+	      selector: selector,
+	      data: timeData[i],
+	      taxa: taxaFiltered,
+	      taxonLabelItalics: true,
+	      taxonLabelFontSize: 11,
+	      legendFontSize: 14,
+	      width: 350,
+	      height: 220,
+	      perRow: perRow,
+	      expand: true,
+	      axisLeft: 'counts',
+	      axisBottom: 'tick',
+	      axisRight: 'on',
+	      axisTop: 'on',
+	      interactivity: '',
+	      showCounts: 'bar',
+	      showProps: '',
+	      minYear: 2000,
+	      maxYear: 2020
+	    };
+	    showMessage(i === 2 ? 'combine' : i + 1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>");
+	    setTimeout(function () {
+	      window.brccharts.trend(opts);
+	      showMessage(i === 2 ? 'combine' : i + 1, null);
+	    }, 1);
+	  }
+
+	  currentPerRow[i] = perRow;
+	  currentTaxonFilter[i] = taxonFilter;
+	  currentYtype[i] = ytype;
+	}
+
+	var timeseries = /*#__PURE__*/Object.freeze({
+		__proto__: null,
 		gui: gui,
 		tabSelected: tabSelected,
 		dataCleared: dataCleared,
 		fieldConfigCleared: fieldConfigCleared,
-		mapoverviewMap: mapoverviewMap,
-		clear: clear,
-		mapoverviewClearMap: mapoverviewClearMap,
-		mapoverviewDisplay: mapoverviewDisplay
+		timeseriesDisplay: timeseriesDisplay
 	});
 
 	var dateFormats = [{
@@ -11208,6 +11493,10 @@
 	  id: 'phenology',
 	  caption: 'Phenology',
 	  fns: phenology
+	}, {
+	  id: 'timeseries',
+	  caption: 'Time series',
+	  fns: timeseries
 	}];
 	var configFields = [{
 	  id: 'taxon',
@@ -11264,6 +11553,63 @@
 	    input.attr('onclick', "brcdseval.".concat(fn, "()"));
 	    fldset.append('label').text("Combine display");
 	  }
+	}
+	function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, buttonCaption) {
+	  var input = parent.append('input');
+	  input.attr('id', "".concat(prefix, "-taxon-").concat(i));
+	  input.attr('list', "".concat(prefix, "-datalist-").concat(i));
+	  input.attr('onfocus', "".concat(onfocusFn, "(").concat(i, ", this)"));
+	  input.attr('placeholder', 'Start typing taxon...');
+	  var datalist = parent.append('datalist');
+	  datalist.attr('id', "".concat(prefix, "-datalist-").concat(i));
+	  datalist.attr('autocomplete', 'on');
+	  var button = parent.append('button').text(buttonCaption);
+	  button.attr('onclick', "".concat(onclickFn, "(").concat(i, ")"));
+	}
+	function populateTaxonSelectionControl(i, prefix) {
+	  var tf = data[i - 1].fields.taxon;
+	  var taxa = [];
+	  data[i - 1].json.forEach(function (r) {
+	    if (taxa.indexOf(r[tf]) === -1) {
+	      taxa.push(r[tf]);
+	    }
+	  });
+	  taxa.sort().forEach(function (t) {
+	    d3__default['default'].select("#".concat(prefix, "-datalist-").concat(i)).append('option').text(t);
+	  });
+	}
+	function textInput(parent, id, placeholder, onclickFn, buttonCaption) {
+	  var divTs = parent.append('div');
+	  divTs.style('display', 'inline-block');
+	  var iTs = divTs.append('input');
+	  iTs.attr('id', id);
+	  iTs.attr('placeholder', placeholder);
+	  var bTs = divTs.append('button');
+	  bTs.text(buttonCaption);
+	  bTs.attr('onclick', "".concat(onclickFn, "()"));
+	}
+	function radioButtonSet(parent, name, prefix, onclickFn, data) {
+	  // Proportions vs counts radio buttons
+	  function makeRadio(value, label, checked) {
+	    var rad = divRads.append('input');
+	    rad.attr('type', 'radio');
+	    rad.attr('id', "".concat(prefix, "-").concat(value));
+	    rad.attr('name', name);
+	    rad.attr('value', value);
+	    rad.attr('onclick', "".concat(onclickFn, "()"));
+	    rad.property('checked', checked);
+	    var radlab = divRads.append('label').text(label);
+	    radlab.attr('for', "".concat(prefix, "-").concat(value));
+	  }
+
+	  var divRads = parent.append('div');
+	  divRads.style('margin-left', '1em');
+	  divRads.style('display', 'inline-block'); // The data must be an array of objects with these properties:
+	  // value, label and checked.
+
+	  data.forEach(function (d) {
+	    return makeRadio(d.value, d.label, d.checked);
+	  });
 	}
 	function dateValid(date) {
 	  return dateFormats.some(function (df) {
@@ -11394,6 +11740,7 @@
 	exports.redoSummaries = redoSummaries;
 	exports.setFieldConfig = setFieldConfig;
 	exports.summaryDisplay = summaryDisplay;
+	exports.timeseriesDisplay = timeseriesDisplay;
 
 	Object.defineProperty(exports, '__esModule', { value: true });
 

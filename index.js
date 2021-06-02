@@ -2,6 +2,7 @@ import { openPage, init } from './src/gui'
 import { fileOpened, setFieldConfig, clearFieldConfig } from './src/load'
 import { summaryDisplay, redoSummaries  } from './src/summary'
 import { phenologyDisplay } from './src/phenology'
+import { timeseriesDisplay } from './src/timeseries'
 import { mapoverviewDisplay, mapoverviewMap, mapoverviewClearMap } from './src/mapoverview'
 import pkg from './package.json'
 
@@ -20,5 +21,6 @@ export {
   mapoverviewDisplay,
   mapoverviewMap,
   mapoverviewClearMap,
-  phenologyDisplay
+  phenologyDisplay,
+  timeseriesDisplay
 } 
