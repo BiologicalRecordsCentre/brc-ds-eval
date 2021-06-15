@@ -96,6 +96,17 @@ export const configFields = [
   },
 ]
 
+export function numberInput(fldset, id, label, min, max, fn) {
+  const input = fldset.append('input')
+  input.attr('type', 'number')
+  input.attr('placeholder', label)
+  input.attr('min', min)
+  input.attr('max', max)
+  input.attr('id', id)
+  input.style('margin', '0 1em')
+  input.attr('onchange', `${fn}()`)
+}
+
 export function datasetCheckboxes(sel, prefix, fn, combineButton) {
 
   // Generic control to switch between datasets

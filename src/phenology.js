@@ -280,6 +280,8 @@ function makeChart(i) {
       interactivity: '',
     }
 
+console.log('phenData', opts)
+
     showMessage(i === 2 ? 'combine' : i+1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>")
     setTimeout(() => {
       window.brccharts.phen1(opts)

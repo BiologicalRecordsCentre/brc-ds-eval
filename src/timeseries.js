@@ -1,11 +1,14 @@
 import * as d3 from 'd3'
 import * as gen from './gen'
+import { getLowerResGrs, checkGr } from 'brc-atlas-bigr'
 
 const timeData = [null, null, null]
 const dChecked = [true, false, false]
 const currentPerRow = [0, 0, 0]
 const currentTaxonFilter = ['', '', '']
 const currentYtype = ['', '', '']
+const currentMinYear = ['', '', '']
+const currentMaxYear = ['', '', '']
 
 // Standard interface functions
 export function gui(sel) {
@@ -25,9 +28,13 @@ export function gui(sel) {
   // Records vs visits radio buttons
   const radios = [
     {value: 'count', label: 'Record counts', checked: true},
-    {value: 'visit', label: 'Unique visits', checked: false}
+    {value: 'visits', label: 'Unique visits', checked: false}
   ]
   gen.radioButtonSet(fldset, 'rad-timeseries-count-type', 'rad-timeseries-count', 'brcdseval.timeseriesDisplay', radios)
+
+  // Year input
+  gen.numberInput(fldset, 'input-timeseries-minyear', 'Min year', 1980, 2021, 'brcdseval.timeseriesDisplay')
+  gen.numberInput(fldset, 'input-timeseries-maxyear', 'Max year', 1980, 2021, 'brcdseval.timeseriesDisplay')
 
   function tableDiv(i, initDisplay) {
     const tabDiv = div.append('div')
@@ -192,41 +199,69 @@ function loadData(i) {
     gen.data[i].json.forEach(r => {
       const date = r[gen.data[i].fields.date]
       const taxon = r[gen.data[i].fields.taxon]
-      //const gr = r[gen.data[i].fields.gr]
+      const gr = gen.data[i].fields.gr ? r[gen.data[i].fields.gr] : null
+
+      // If the gr and date are set, concatenate them - unique combinations
+      // are considered unique visits.
+      let date1km = null
+      if (gr && date) {
+        let grcheck
+        try {
+          grcheck = checkGr(gr)
+        } catch (err) {
+          grcheck = null
+        }
+        if (grcheck && grcheck.precision <= 1000) {
+          date1km = `${getLowerResGrs(gr).p1000}-${date}`
+        }
+      }
+      
       if (date && taxon && gen.dateValid(date)) {
         const year = gen.dateYear(date)
         const pd = timeData[i].find(pd => pd.taxon === taxon && pd.year === year)
         if (pd) {
           pd.count = pd.count + 1
+          if (date1km && pd.date1km.indexOf(date1km) === -1) {
+            pd.date1km.push(date1km)
+          }
         } else {
           timeData[i].push({
             taxon: taxon,
             year: year,
-            count: 1
+            count: 1,
+            date1km: date1km ? [date1km] : []
           })
         }
-        resolve()
-      } else {
-        reject()
       }
     })
+
+    // Set the visit count from array and then delete the array which
+    // is no longer required
+    timeData[i].forEach(r => {
+      r['visits'] = r.date1km.length
+      delete r.date1km
+    })
+    resolve()
   })
 }
 
 function combineData() {
   if (timeData[0] && timeData[1]) {
     // Combine the data into a single collection
-    timeData[2] = timeData[0].map(ts => {return {...ts, count1: null}})
+    timeData[2] = timeData[0].map(ts => {return {...ts, count1: null, visits1: null}})
     timeData[1].forEach(ts1 => {
       const tscmatch = timeData[2].find(tsc => tsc.taxon === ts1.taxon && tsc.year === ts1.year)
       if (tscmatch) {
         tscmatch.count1 = ts1.count
+        tscmatch.visits1 = ts1.visits
       } else {
         timeData[2].push({
           taxon: ts1.taxon,
           year: ts1.year,
           count: null,
-          count1: ts1.count
+          count1: ts1.count,
+          visits: null,
+          visits1: ts1.visits
         })
       }
     })
@@ -241,12 +276,19 @@ function makeChart(i) {
   }
 
   const ytype = d3.select('input[name=rad-timeseries-count-type]:checked').property('value')
+  const minYear = Number(d3.select('#input-timeseries-minyear').property('value'))
+  const maxYear = Number(d3.select('#input-timeseries-maxyear').property('value'))
 
-  let selector
+  let selector, metrics
   if (i < 2) {
     selector = `#timeseries-chart-${i+1}`
+    metrics = [{ prop: ytype, label: gen.data[i].name, colour: '#4188A3', opacity: 1 }]
   } else {
     selector = `#timeseries-chart-combine`
+    metrics = [
+      { prop: ytype, label: gen.data[0].name, colour: '#4188A3', opacity: 0.5 },
+      { prop: `${ytype}1`, label: gen.data[1].name, colour: 'red', opacity: 0.5 }
+    ]
   }
 
   const taxonFilter = d3.select('#timeseries-filter').property('value')
@@ -263,41 +305,50 @@ function makeChart(i) {
     || !d3.select(selector).html().length 
     || taxonFilter !== currentTaxonFilter[i]
     || currentYtype[i] !== ytype
+    || currentMinYear[i] !== minYear
+    || currentMaxYear[i] !== maxYear
     ) {
     // Either this chart has not yet been generated or
-    // the perRow value has changed.
+    // one of the major configuration options has changed.
 
     d3.select(selector).html('')
+
+    console.log('timedata', timeData[i])
+
+    console.log('years', minYear, maxYear)
 
     const opts = {
       selector: selector,
       data: timeData[i],
+      metrics: metrics,
       taxa: taxaFiltered,
       taxonLabelItalics: true,
       taxonLabelFontSize: 11,
+      showLegend: true,
       legendFontSize: 14,
       width: 350,
       height: 220,
       perRow: perRow,
       expand: true,
-      axisLeft: 'counts',
+      axisLeft: 'tick',
       axisBottom: 'tick',
       axisRight: 'on',
       axisTop: 'on',
       interactivity: '',
       showCounts: 'bar',
-      showProps: '',
-      minYear: 2000,
-      maxYear: 2020,
+      minYear: minYear ? minYear : null,
+      maxYear: maxYear ? maxYear : null
     }
 
-    showMessage(i === 2 ? 'combine' : i+1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>")
+    showMessage(i === 2 ? 'combine' : i+1, "<span style='color: orange; font-weight: bold'>Generating time series display...</span>")
     setTimeout(() => {
-      window.brccharts.trend(opts)
+      window.brccharts.yearly(opts)
       showMessage(i === 2 ? 'combine' : i+1, null)
     },1)
   }
   currentPerRow[i] = perRow
   currentTaxonFilter[i] = taxonFilter
   currentYtype[i] = ytype
+  currentMinYear[i] = minYear
+  currentMaxYear[i] = maxYear
 }

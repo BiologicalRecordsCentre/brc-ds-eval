@@ -10965,6 +10965,7 @@
 	      ytype: ytype,
 	      interactivity: ''
 	    };
+	    console.log('phenData', opts);
 	    showMessage$1(i === 2 ? 'combine' : i + 1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>");
 	    setTimeout(function () {
 	      window.brccharts.phen1(opts);
@@ -11135,7 +11136,9 @@
 	var dChecked = [true, false, false];
 	var currentPerRow = [0, 0, 0];
 	var currentTaxonFilter = ['', '', ''];
-	var currentYtype = ['', '', '']; // Standard interface functions
+	var currentYtype = ['', '', ''];
+	var currentMinYear = ['', '', ''];
+	var currentMaxYear = ['', '', '']; // Standard interface functions
 
 	function gui(sel) {
 	  datasetCheckboxes(sel, 'timeseries-check', 'timeseriesDisplay', true); // Layout for time series charts
@@ -11152,11 +11155,14 @@
 	    label: 'Record counts',
 	    checked: true
 	  }, {
-	    value: 'visit',
+	    value: 'visits',
 	    label: 'Unique visits',
 	    checked: false
 	  }];
-	  radioButtonSet(fldset, 'rad-timeseries-count-type', 'rad-timeseries-count', 'brcdseval.timeseriesDisplay', radios);
+	  radioButtonSet(fldset, 'rad-timeseries-count-type', 'rad-timeseries-count', 'brcdseval.timeseriesDisplay', radios); // Year input
+
+	  numberInput(fldset, 'input-timeseries-minyear', 'Min year', 1980, 2021, 'brcdseval.timeseriesDisplay');
+	  numberInput(fldset, 'input-timeseries-maxyear', 'Max year', 1980, 2021, 'brcdseval.timeseriesDisplay');
 
 	  function tableDiv(i, initDisplay) {
 	    var tabDiv = div.append('div');
@@ -11320,7 +11326,25 @@
 	  return new Promise(function (resolve, reject) {
 	    data[i].json.forEach(function (r) {
 	      var date = r[data[i].fields.date];
-	      var taxon = r[data[i].fields.taxon]; //const gr = r[gen.data[i].fields.gr]
+	      var taxon = r[data[i].fields.taxon];
+	      var gr = data[i].fields.gr ? r[data[i].fields.gr] : null; // If the gr and date are set, concatenate them - unique combinations
+	      // are considered unique visits.
+
+	      var date1km = null;
+
+	      if (gr && date) {
+	        var grcheck;
+
+	        try {
+	          grcheck = checkGr(gr);
+	        } catch (err) {
+	          grcheck = null;
+	        }
+
+	        if (grcheck && grcheck.precision <= 1000) {
+	          date1km = "".concat(getLowerResGrs(gr).p1000, "-").concat(date);
+	        }
+	      }
 
 	      if (date && taxon && dateValid(date)) {
 	        var year = dateYear(date);
@@ -11330,19 +11354,27 @@
 
 	        if (pd) {
 	          pd.count = pd.count + 1;
+
+	          if (date1km && pd.date1km.indexOf(date1km) === -1) {
+	            pd.date1km.push(date1km);
+	          }
 	        } else {
 	          timeData[i].push({
 	            taxon: taxon,
 	            year: year,
-	            count: 1
+	            count: 1,
+	            date1km: date1km ? [date1km] : []
 	          });
 	        }
-
-	        resolve();
-	      } else {
-	        reject();
 	      }
+	    }); // Set the visit count from array and then delete the array which
+	    // is no longer required
+
+	    timeData[i].forEach(function (r) {
+	      r['visits'] = r.date1km.length;
+	      delete r.date1km;
 	    });
+	    resolve();
 	  });
 	}
 
@@ -11351,7 +11383,8 @@
 	    // Combine the data into a single collection
 	    timeData[2] = timeData[0].map(function (ts) {
 	      return _objectSpread2(_objectSpread2({}, ts), {}, {
-	        count1: null
+	        count1: null,
+	        visits1: null
 	      });
 	    });
 	    timeData[1].forEach(function (ts1) {
@@ -11361,12 +11394,15 @@
 
 	      if (tscmatch) {
 	        tscmatch.count1 = ts1.count;
+	        tscmatch.visits1 = ts1.visits;
 	      } else {
 	        timeData[2].push({
 	          taxon: ts1.taxon,
 	          year: ts1.year,
 	          count: null,
-	          count1: ts1.count
+	          count1: ts1.count,
+	          visits: null,
+	          visits1: ts1.visits
 	        });
 	      }
 	    });
@@ -11381,12 +11417,31 @@
 	  }
 
 	  var ytype = d3__namespace.select('input[name=rad-timeseries-count-type]:checked').property('value');
-	  var selector;
+	  var minYear = Number(d3__namespace.select('#input-timeseries-minyear').property('value'));
+	  var maxYear = Number(d3__namespace.select('#input-timeseries-maxyear').property('value'));
+	  var selector, metrics;
 
 	  if (i < 2) {
 	    selector = "#timeseries-chart-".concat(i + 1);
+	    metrics = [{
+	      prop: ytype,
+	      label: data[i].name,
+	      colour: '#4188A3',
+	      opacity: 1
+	    }];
 	  } else {
 	    selector = "#timeseries-chart-combine";
+	    metrics = [{
+	      prop: ytype,
+	      label: data[0].name,
+	      colour: '#4188A3',
+	      opacity: 0.5
+	    }, {
+	      prop: "".concat(ytype, "1"),
+	      label: data[1].name,
+	      colour: 'red',
+	      opacity: 0.5
+	    }];
 	  }
 
 	  var taxonFilter = d3__namespace.select('#timeseries-filter').property('value');
@@ -11405,34 +11460,37 @@
 	    taxaFiltered = uniqueTaxa;
 	  }
 
-	  if (perRow !== currentPerRow[i] || !d3__namespace.select(selector).html().length || taxonFilter !== currentTaxonFilter[i] || currentYtype[i] !== ytype) {
+	  if (perRow !== currentPerRow[i] || !d3__namespace.select(selector).html().length || taxonFilter !== currentTaxonFilter[i] || currentYtype[i] !== ytype || currentMinYear[i] !== minYear || currentMaxYear[i] !== maxYear) {
 	    // Either this chart has not yet been generated or
-	    // the perRow value has changed.
+	    // one of the major configuration options has changed.
 	    d3__namespace.select(selector).html('');
+	    console.log('timedata', timeData[i]);
+	    console.log('years', minYear, maxYear);
 	    var opts = {
 	      selector: selector,
 	      data: timeData[i],
+	      metrics: metrics,
 	      taxa: taxaFiltered,
 	      taxonLabelItalics: true,
 	      taxonLabelFontSize: 11,
+	      showLegend: true,
 	      legendFontSize: 14,
 	      width: 350,
 	      height: 220,
 	      perRow: perRow,
 	      expand: true,
-	      axisLeft: 'counts',
+	      axisLeft: 'tick',
 	      axisBottom: 'tick',
 	      axisRight: 'on',
 	      axisTop: 'on',
 	      interactivity: '',
 	      showCounts: 'bar',
-	      showProps: '',
-	      minYear: 2000,
-	      maxYear: 2020
+	      minYear: minYear ? minYear : null,
+	      maxYear: maxYear ? maxYear : null
 	    };
-	    showMessage(i === 2 ? 'combine' : i + 1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>");
+	    showMessage(i === 2 ? 'combine' : i + 1, "<span style='color: orange; font-weight: bold'>Generating time series display...</span>");
 	    setTimeout(function () {
-	      window.brccharts.trend(opts);
+	      window.brccharts.yearly(opts);
 	      showMessage(i === 2 ? 'combine' : i + 1, null);
 	    }, 1);
 	  }
@@ -11440,6 +11498,8 @@
 	  currentPerRow[i] = perRow;
 	  currentTaxonFilter[i] = taxonFilter;
 	  currentYtype[i] = ytype;
+	  currentMinYear[i] = minYear;
+	  currentMaxYear[i] = maxYear;
 	}
 
 	var timeseries = /*#__PURE__*/Object.freeze({
@@ -11523,6 +11583,16 @@
 	  id: 'source',
 	  caption: 'Source'
 	}];
+	function numberInput(fldset, id, label, min, max, fn) {
+	  var input = fldset.append('input');
+	  input.attr('type', 'number');
+	  input.attr('placeholder', label);
+	  input.attr('min', min);
+	  input.attr('max', max);
+	  input.attr('id', id);
+	  input.style('margin', '0 1em');
+	  input.attr('onchange', "".concat(fn, "()"));
+	}
 	function datasetCheckboxes(sel, prefix, fn, combineButton) {
 	  // Generic control to switch between datasets
 	  function makeCheckBox(id, checked) {
