@@ -12,7 +12,7 @@ export function gui(sel) {
   
   gen.datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay', true)
 
-  // Layout for summary tables
+  // Layout for phenology charts
   const div = d3.select(sel).append('div')
 
   const fldset = div.append('fieldset')
@@ -20,33 +20,15 @@ export function gui(sel) {
   fldset.style('margin-top', '0.5em')
 
   // Taxon filter
-  const divTs = fldset.append('div')
-  divTs.style('display', 'inline-block')
-  const iTs = divTs.append('input')
-  iTs.attr('id', 'phenology-filter')
-  iTs.attr('placeholder', 'Enter a filter for taxa')
-  const bTs = divTs.append('button')
-  bTs.text('Apply')
-  bTs.attr('onclick', 'brcdseval.phenologyDisplay()')
+  gen.textInput(fldset, 'phenology-filter', 'Enter a filter for taxa', 'brcdseval.phenologyDisplay', 'Apply')
 
   // Proportions vs counts radio buttons
-  function makeRadio(type, label, checked) {
-    const rad = divRads.append('input')
-    rad.attr('type', 'radio')
-    rad.attr('id', `rad-phen-count-${type}`)
-    rad.attr('name', 'rad-phen-count-type')
-    rad.attr('value', type)
-    rad.attr('onclick', `brcdseval.phenologyDisplay()`)
-    rad.property('checked', checked)
-    const radlab = divRads.append('label').text(label)
-    radlab.attr('for', `rad-phen-count-${type}`)
-  }
-  const divRads = fldset.append('div')
-  divRads.style('margin-left', '1em')
-  divRads.style('display', 'inline-block')
 
-  makeRadio('count', 'Record counts', true) 
-  makeRadio('proportion', 'Proporation of record counts', false) 
+  const radios = [
+    {value: 'count', label: 'Record counts', checked: true},
+    {value: 'proportion', label: 'Proporation of record counts', checked: false}
+  ]
+  gen.radioButtonSet(fldset, 'rad-phen-count-type', 'rad-phen-count', 'brcdseval.phenologyDisplay', radios)
 
   function tableDiv(i, initDisplay) {
     const tabDiv = div.append('div')
@@ -297,6 +279,8 @@ function makeChart(i) {
       ytype: ytype,
       interactivity: '',
     }
+
+console.log('phenData', opts)
 
     showMessage(i === 2 ? 'combine' : i+1, "<span style='color: orange; font-weight: bold'>Generating phenology display...</span>")
     setTimeout(() => {

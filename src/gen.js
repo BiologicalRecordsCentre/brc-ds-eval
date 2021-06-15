@@ -4,6 +4,7 @@ import * as load from './load'
 import * as summary from './summary'
 import * as phenology from './phenology'
 import * as mapoverview from './mapoverview'
+import * as timeseries from './timeseries'
 
 const dateFormats = [
   {
@@ -53,6 +54,11 @@ export const tabs = [
     caption: 'Phenology',
     fns: phenology
   },
+  {
+    id: 'timeseries',
+    caption: 'Time series',
+    fns: timeseries
+  },
 ]
 
 export const configFields = [
@@ -90,6 +96,17 @@ export const configFields = [
   },
 ]
 
+export function numberInput(fldset, id, label, min, max, fn) {
+  const input = fldset.append('input')
+  input.attr('type', 'number')
+  input.attr('placeholder', label)
+  input.attr('min', min)
+  input.attr('max', max)
+  input.attr('id', id)
+  input.style('margin', '0 1em')
+  input.attr('onchange', `${fn}()`)
+}
+
 export function datasetCheckboxes(sel, prefix, fn, combineButton) {
 
   // Generic control to switch between datasets
@@ -119,6 +136,66 @@ export function datasetCheckboxes(sel, prefix, fn, combineButton) {
     input.attr('onclick', `brcdseval.${fn}()`)
     fldset.append('label').text(`Combine display`)
   }
+}
+
+export function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, buttonCaption) {
+  const input = parent.append('input')
+  input.attr('id', `${prefix}-taxon-${i}`)
+  input.attr('list', `${prefix}-datalist-${i}`)
+  input.attr('onfocus', `${onfocusFn}(${i}, this)`)
+  input.attr('placeholder', 'Start typing taxon...')
+  const datalist = parent.append('datalist')
+  datalist.attr('id', `${prefix}-datalist-${i}`)
+  datalist.attr('autocomplete', 'on')
+  const button = parent.append('button').text(buttonCaption)
+  button.attr('onclick', `${onclickFn}(${i})`)
+}
+
+export function populateTaxonSelectionControl(i, prefix) {
+  const tf = data[i-1].fields.taxon
+  const taxa = []
+  data[i-1].json.forEach(r => {
+    if (taxa.indexOf(r[tf]) === -1) {
+      taxa.push(r[tf])
+    }
+  })
+  taxa.sort().forEach(t => {
+    d3.select(`#${prefix}-datalist-${i}`).append('option').text(t)
+  })
+}
+
+export function textInput(parent, id, placeholder, onclickFn, buttonCaption) {
+  const divTs = parent.append('div')
+  divTs.style('display', 'inline-block')
+  const iTs = divTs.append('input')
+  iTs.attr('id', id)
+  iTs.attr('placeholder', placeholder)
+  const bTs = divTs.append('button')
+  bTs.text(buttonCaption)
+  bTs.attr('onclick', `${onclickFn}()`)
+}
+
+export function radioButtonSet (parent, name, prefix, onclickFn, data) {
+
+  // Proportions vs counts radio buttons
+  function makeRadio(value, label, checked, ) {
+    const rad = divRads.append('input')
+    rad.attr('type', 'radio')
+    rad.attr('id', `${prefix}-${value}`)
+    rad.attr('name', name)
+    rad.attr('value', value)
+    rad.attr('onclick', `${onclickFn}()`)
+    rad.property('checked', checked)
+    const radlab = divRads.append('label').text(label)
+    radlab.attr('for', `${prefix}-${value}`)
+  }
+  const divRads = parent.append('div')
+  divRads.style('margin-left', '1em')
+  divRads.style('display', 'inline-block')
+
+  // The data must be an array of objects with these properties:
+  // value, label and checked.
+  data.forEach(d => makeRadio(d.value, d.label, d.checked))
 }
 
 export function dateValid(date) {
