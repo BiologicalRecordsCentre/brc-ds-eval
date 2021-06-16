@@ -73,11 +73,11 @@ export function summaryDisplay() {
   const d2 = d3.select('#summary-check-2').property("checked")
 
   if (d1 && d2) {
-    d3.select('#summary-div-1').classed("split", true)
-    d3.select('#summary-div-2').classed("split", true)
+    d3.select('#summary-div-1').classed("splitx", true)
+    d3.select('#summary-div-2').classed("splitx", true)
   } else {
-    d3.select('#summary-div-1').classed("split", false)
-    d3.select('#summary-div-2').classed("split", false)
+    d3.select('#summary-div-1').classed("splitx", false)
+    d3.select('#summary-div-2').classed("splitx", false)
   }
   if (d1) {
     d3.select('#summary-div-1').style("display", "")

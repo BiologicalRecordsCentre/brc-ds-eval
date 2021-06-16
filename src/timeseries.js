@@ -109,11 +109,11 @@ export function timeseriesDisplay() {
   } else {
     d3.select('#timeseries-div-combine').style("display", "none")
     if (dChecked[0] && dChecked[1]) {
-      d3.select('#timeseries-div-1').classed("split", true)
-      d3.select('#timeseries-div-2').classed("split", true)
+      d3.select('#timeseries-div-1').classed("splitx", true)
+      d3.select('#timeseries-div-2').classed("splitx", true)
     } else {
-      d3.select('#timeseries-div-1').classed("split", false)
-      d3.select('#timeseries-div-2').classed("split", false)
+      d3.select('#timeseries-div-1').classed("splitx", false)
+      d3.select('#timeseries-div-2').classed("splitx", false)
     }
     if (dChecked[0]) {
       d3.select('#timeseries-div-1').style("display", "")

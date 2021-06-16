@@ -8942,7 +8942,7 @@
 	  d3__namespace.select('#jnccLoading').text('failed to load').style('color', 'red');
 	}); // Standard interface functions
 
-	function gui$4(sel) {
+	function gui$5(sel) {
 	  // Background downloading of resources
 	  d3__namespace.select(sel).append('h3').text('Packaged resources');
 	  d3__namespace.select(sel).append('p').text("\n    These resources are packaged with the tool, you can carry on \n    specifying your local CSV datasets whilst these are downloading.\n  ");
@@ -8998,13 +8998,13 @@
 	  splitDiv(1);
 	  splitDiv(2);
 	}
-	function tabSelected$4() {}
-	function dataCleared$4(i) {
+	function tabSelected$5() {}
+	function dataCleared$5(i) {
 	  d3__namespace.select("#csvLoading".concat(i)).html('No file loaded');
 	  d3__namespace.select("#csvLoading".concat(i)).style('color', 'red');
 	  setFieldDropdowns(i);
 	}
-	function fieldConfigCleared$4(i) {
+	function fieldConfigCleared$5(i) {
 	  d3__namespace.selectAll("#field-selects-".concat(i, " select")).property('disabled', false);
 	  d3__namespace.select("#setFieldConfig".concat(i)).property('disabled', false);
 	  d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', true);
@@ -9146,10 +9146,10 @@
 
 	var load = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		gui: gui$4,
-		tabSelected: tabSelected$4,
-		dataCleared: dataCleared$4,
-		fieldConfigCleared: fieldConfigCleared$4,
+		gui: gui$5,
+		tabSelected: tabSelected$5,
+		dataCleared: dataCleared$5,
+		fieldConfigCleared: fieldConfigCleared$5,
 		fileOpened: fileOpened,
 		setFieldConfig: setFieldConfig,
 		clearFieldConfig: clearFieldConfig
@@ -10427,7 +10427,7 @@
 
 	var summary = [null, null]; // Standard interface functions
 
-	function gui$3(sel) {
+	function gui$4(sel) {
 	  // Dataset checkboxes
 	  datasetCheckboxes(sel, 'summary-check', 'summaryDisplay'); // Record grouping
 
@@ -10470,19 +10470,19 @@
 	  tableDiv(1);
 	  tableDiv(2);
 	}
-	function tabSelected$3() {
+	function tabSelected$4() {
 	  summariesTables();
 	}
-	function dataCleared$3(i) {
-	  clear$3(i);
+	function dataCleared$4(i) {
+	  clear$4(i);
 	}
-	function fieldConfigCleared$3(i) {
-	  clear$3(i);
+	function fieldConfigCleared$4(i) {
+	  clear$4(i);
 	} // Exported from the library to use from html interface
 
 	function redoSummaries() {
-	  clear$3(1);
-	  clear$3(2);
+	  clear$4(1);
+	  clear$4(2);
 	  summariesTables();
 	}
 	function summaryDisplay() {
@@ -10491,11 +10491,11 @@
 	  var d2 = d3__namespace.select('#summary-check-2').property("checked");
 
 	  if (d1 && d2) {
-	    d3__namespace.select('#summary-div-1').classed("split", true);
-	    d3__namespace.select('#summary-div-2').classed("split", true);
+	    d3__namespace.select('#summary-div-1').classed("splitx", true);
+	    d3__namespace.select('#summary-div-2').classed("splitx", true);
 	  } else {
-	    d3__namespace.select('#summary-div-1').classed("split", false);
-	    d3__namespace.select('#summary-div-2').classed("split", false);
+	    d3__namespace.select('#summary-div-1').classed("splitx", false);
+	    d3__namespace.select('#summary-div-2').classed("splitx", false);
 	  }
 
 	  if (d1) {
@@ -10644,7 +10644,7 @@
 	  generate(2);
 	}
 
-	function clear$3(i) {
+	function clear$4(i) {
 	  if (summary[i - 1]) {
 	    summary[i - 1].destroy();
 	    summary[i - 1] = null;
@@ -10654,21 +10654,21 @@
 
 	var summary$1 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		gui: gui$3,
-		tabSelected: tabSelected$3,
-		dataCleared: dataCleared$3,
-		fieldConfigCleared: fieldConfigCleared$3,
+		gui: gui$4,
+		tabSelected: tabSelected$4,
+		dataCleared: dataCleared$4,
+		fieldConfigCleared: fieldConfigCleared$4,
 		redoSummaries: redoSummaries,
 		summaryDisplay: summaryDisplay
 	});
 
 	var phenData = [null, null, null];
-	var dChecked$1 = [true, false, false];
+	var dChecked$2 = [true, false, false];
 	var currentPerRow$1 = [0, 0, 0];
 	var currentTaxonFilter$1 = ['', '', ''];
 	var currentYtype$1 = ['', '', '']; // Standard interface functions
 
-	function gui$2(sel) {
+	function gui$3(sel) {
 	  datasetCheckboxes(sel, 'phenology-check', 'phenologyDisplay', true); // Layout for phenology charts
 
 	  var div = d3__namespace.select(sel).append('div');
@@ -10712,7 +10712,7 @@
 	  tabDiv.append('p').attr('id', "phenology-message-combine");
 	  tabDiv.append('div').attr('id', "phenology-chart-combine");
 	}
-	function tabSelected$2() {
+	function tabSelected$3() {
 	  for (var i = 0; i < 2; i++) {
 	    // Warn if data selected but the necessary config is not set
 	    if (data[i] && data[i].fields && (!data[i].fields.taxon || !data[i].fields.date)) {
@@ -10725,41 +10725,41 @@
 
 	  displayData$1();
 	}
-	function dataCleared$2(i) {
-	  clear$2(i);
+	function dataCleared$3(i) {
+	  clear$3(i);
 	}
-	function fieldConfigCleared$2(i) {
-	  clear$2(i);
+	function fieldConfigCleared$3(i) {
+	  clear$3(i);
 	} // Exported from the library to use from html interface
 
 	function phenologyDisplay() {
 	  // Function responsible for display one or both charts
-	  dChecked$1[0] = d3__namespace.select('#phenology-check-1').property("checked");
-	  dChecked$1[1] = d3__namespace.select('#phenology-check-2').property("checked");
-	  dChecked$1[2] = d3__namespace.select("#phenology-check-combine").property('checked');
+	  dChecked$2[0] = d3__namespace.select('#phenology-check-1').property("checked");
+	  dChecked$2[1] = d3__namespace.select('#phenology-check-2').property("checked");
+	  dChecked$2[2] = d3__namespace.select("#phenology-check-combine").property('checked');
 
-	  if (dChecked$1[2] && dChecked$1[0] && dChecked$1[1]) {
+	  if (dChecked$2[2] && dChecked$2[0] && dChecked$2[1]) {
 	    d3__namespace.select('#phenology-div-combine').style("display", "");
 	    d3__namespace.select('#phenology-div-1').style("display", "none");
 	    d3__namespace.select('#phenology-div-2').style("display", "none");
 	  } else {
 	    d3__namespace.select('#phenology-div-combine').style("display", "none");
 
-	    if (dChecked$1[0] && dChecked$1[1]) {
-	      d3__namespace.select('#phenology-div-1').classed("split", true);
-	      d3__namespace.select('#phenology-div-2').classed("split", true);
+	    if (dChecked$2[0] && dChecked$2[1]) {
+	      d3__namespace.select('#phenology-div-1').classed("splitx", true);
+	      d3__namespace.select('#phenology-div-2').classed("splitx", true);
 	    } else {
-	      d3__namespace.select('#phenology-div-1').classed("split", false);
-	      d3__namespace.select('#phenology-div-2').classed("split", false);
+	      d3__namespace.select('#phenology-div-1').classed("splitx", false);
+	      d3__namespace.select('#phenology-div-2').classed("splitx", false);
 	    }
 
-	    if (dChecked$1[0]) {
+	    if (dChecked$2[0]) {
 	      d3__namespace.select('#phenology-div-1').style("display", "");
 	    } else {
 	      d3__namespace.select('#phenology-div-1').style("display", "none");
 	    }
 
-	    if (dChecked$1[1]) {
+	    if (dChecked$2[1]) {
 	      d3__namespace.select('#phenology-div-2').style("display", "");
 	    } else {
 	      d3__namespace.select('#phenology-div-2').style("display", "none");
@@ -10769,7 +10769,7 @@
 	  displayData$1();
 	} // Helper functions
 
-	function clear$2(i) {
+	function clear$3(i) {
 	  phenData[i - 1] = null;
 	  phenData[2] = null; // Combined data
 
@@ -10783,7 +10783,7 @@
 	  var _loop = function _loop(i) {
 	    var p = void 0; // Generate penology data if not already exists and all the necessary config is set
 
-	    if (dChecked$1[i] && data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.date) {
+	    if (dChecked$2[i] && data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.date) {
 	      if (phenData[i]) {
 	        makeChart$1(i);
 	        p = Promise.resolve();
@@ -10811,7 +10811,7 @@
 	  Promise.all(pLoads).then(function () {
 	    console.log("promises resolved"); // If combine display box is checked
 
-	    if (dChecked$1[2]) {
+	    if (dChecked$2[2]) {
 	      if (phenData[2]) {
 	        makeChart$1(2);
 	      } else {
@@ -10899,7 +10899,7 @@
 	function makeChart$1(i) {
 	  var perRow = 4;
 
-	  if (dChecked$1[0] && dChecked$1[1] && !dChecked$1[2]) {
+	  if (dChecked$2[0] && dChecked$2[1] && !dChecked$2[2]) {
 	    perRow = 2;
 	  }
 
@@ -10980,16 +10980,16 @@
 
 	var phenology = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		gui: gui$2,
-		tabSelected: tabSelected$2,
-		dataCleared: dataCleared$2,
-		fieldConfigCleared: fieldConfigCleared$2,
+		gui: gui$3,
+		tabSelected: tabSelected$3,
+		dataCleared: dataCleared$3,
+		fieldConfigCleared: fieldConfigCleared$3,
 		phenologyDisplay: phenologyDisplay
 	});
 
-	var maps = [null, null]; // Standard interface functions
+	var maps$1 = [null, null]; // Standard interface functions
 
-	function gui$1(sel) {
+	function gui$2(sel) {
 	  function makeMapDiv(i) {
 	    var div = d3__namespace.select(sel).append('div');
 	    div.attr('id', "overviewmap-div-".concat(i));
@@ -11004,7 +11004,7 @@
 	  makeMapDiv(1);
 	  makeMapDiv(2);
 	}
-	function tabSelected$1() {
+	function tabSelected$2() {
 	  var checkMap = function checkMap(i) {
 	    if (data[i - 1].fields && (!data[i - 1].fields.gr || !data[i - 1].fields.taxon)) {
 	      d3__namespace.select("#overviewmap-message-".concat(i)).html("\n          For the overview map, you must configure both the <i>Taxon</i> and <i>Grid ref</i> columns.\n        ");
@@ -11012,16 +11012,16 @@
 	    } else {
 	      d3__namespace.select("#overviewmap-message-".concat(i)).style('display', 'none');
 
-	      if (!maps[i - 1] && data[i - 1].json && data[i - 1].fields) {
+	      if (!maps$1[i - 1] && data[i - 1].json && data[i - 1].fields) {
 	        // Create brc-atlas map object
-	        maps[i - 1] = window.brcatlas.svgMap({
+	        maps$1[i - 1] = window.brcatlas.svgMap({
 	          selector: "#overviewmap-container-".concat(i),
 	          mapid: "overviewmap".concat(i),
 	          transOptsKey: 'BI4',
 	          mapTypesControl: false,
 	          transOptsControl: false,
 	          mapTypesSel: {
-	            hectad: genHecatdMap
+	            hectad: genHecatdMap$1
 	          },
 	          mapTypesKey: 'hectad'
 	        }); // Create taxon selection list
@@ -11029,7 +11029,7 @@
 	        populateTaxonSelectionControl(i, 'overviewmap');
 	      }
 
-	      d3__namespace.select("#overviewmap-div-".concat(i)).style("display", maps[i - 1] ? "" : "none");
+	      d3__namespace.select("#overviewmap-div-".concat(i)).style("display", maps$1[i - 1] ? "" : "none");
 	      d3__namespace.select("#overviewmap-name-".concat(i)).text(data[i - 1].name);
 	    }
 	  };
@@ -11037,28 +11037,28 @@
 	  checkMap(1);
 	  checkMap(2);
 	}
-	function dataCleared$1(i) {
-	  clear$1(i);
+	function dataCleared$2(i) {
+	  clear$2(i);
 	}
-	function fieldConfigCleared$1(i) {
-	  clear$1(i);
+	function fieldConfigCleared$2(i) {
+	  clear$2(i);
 	} // Exported from the library to use from html interface
 
 	function mapoverviewMap(i) {
 	  var taxon = d3__namespace.select("#overviewmap-taxon-".concat(i)).property('value');
-	  maps[i - 1].setIdentfier({
+	  maps$1[i - 1].setIdentfier({
 	    i: i,
 	    taxon: taxon
 	  });
-	  maps[i - 1].redrawMap();
+	  maps$1[i - 1].redrawMap();
 	}
-	function clear$1(i) {
-	  maps[i - 1] = null;
+	function clear$2(i) {
+	  maps$1[i - 1] = null;
 	  d3__namespace.select("#overviewmap-container-".concat(i)).html('');
 	}
 	function mapoverviewClearMap(i, input) {
 	  input.value = '';
-	  maps[i - 1].clearMap();
+	  maps$1[i - 1].clearMap();
 	}
 	function mapoverviewDisplay() {
 	  // Function responsible for display one or both maps
@@ -11076,6 +11076,208 @@
 	  } else {
 	    d3__namespace.select('#overviewmap-div-2').style("display", "none");
 	  }
+	} // Helper functions
+
+	function genHecatdMap$1(props) {
+	  var i = props.i;
+	  var taxon = props.taxon;
+	  var fgr = data[i - 1].fields.gr;
+	  var ft = data[i - 1].fields.taxon;
+	  var hectads = [];
+	  data[i - 1].json.forEach(function (r) {
+	    var grcheck;
+
+	    try {
+	      grcheck = checkGr(r[fgr]);
+	    } catch (err) {
+	      grcheck = null;
+	    }
+
+	    if (grcheck && grcheck.precision <= 10000) {
+	      var hectad = getLowerResGrs(r[fgr]).p10000;
+
+	      if (r[ft] === taxon) {
+	        if (hectads.indexOf(hectad) === -1) {
+	          hectads.push(hectad);
+	        }
+	      }
+	    }
+	  });
+	  var data$1 = hectads.map(function (h) {
+	    return {
+	      gr: h,
+	      colour: 'black'
+	    };
+	  });
+	  return new Promise(function (resolve) {
+	    resolve({
+	      records: data$1,
+	      precision: 10000,
+	      shape: 'circle',
+	      opacity: 1,
+	      size: 1
+	    });
+	  });
+	}
+
+	var mapoverview = /*#__PURE__*/Object.freeze({
+		__proto__: null,
+		gui: gui$2,
+		tabSelected: tabSelected$2,
+		dataCleared: dataCleared$2,
+		fieldConfigCleared: fieldConfigCleared$2,
+		mapoverviewMap: mapoverviewMap,
+		clear: clear$2,
+		mapoverviewClearMap: mapoverviewClearMap,
+		mapoverviewDisplay: mapoverviewDisplay
+	});
+
+	//import bigr from 'brc-atlas-bigr'
+
+	var maps = [null, null];
+	var dChecked$1 = [true, false, false]; // Standard interface functions
+
+	function gui$1(sel) {
+	  datasetCheckboxes(sel, 'slippymap-check', 'mapslippyDisplay', true); // Layout for time series charts
+
+	  var div = d3__namespace.select(sel).append('div'); // Options for slippy map
+
+	  var fldset = div.append('fieldset');
+	  fldset.append('legend').text('Map options');
+	  fldset.style('margin-top', '0.5em'); // Height input
+
+	  numberInput(fldset, 'input-slippymap-height', 'Map height', 300, 1200, 'brcdseval.mapslippySetHeight'); // Layout for time series charts
+
+	  var divMaps = d3__namespace.select(sel).append('div');
+
+	  function makeMapDiv(i) {
+	    var div = divMaps.append('div');
+	    div.attr('id', "slippymap-div-".concat(i));
+	    div.append('h4').attr('id', "slippymap-name-".concat(i));
+	    var p = div.append('p');
+	    taxonSelectionControl(p, i, 'slippymap', 'brcdseval.mapslippyClearMap', 'brcdseval.mapslippyMap', 'Map');
+	    div.append('p').attr('id', "slippymap-message-".concat(i));
+	    div.append('div').attr('id', "slippymap-container-".concat(i));
+	  }
+
+	  makeMapDiv(1);
+	  makeMapDiv(2); // Div for combined display
+
+	  var tabDiv = div.append('div');
+	  tabDiv.style('display', 'none');
+	  tabDiv.attr('id', "slippymap-div-combine");
+	  tabDiv.append('h4').attr('id', "slippymap-name-combine");
+	  tabDiv.append('p').attr('id', "slippymap-message-combine");
+	  tabDiv.append('div').attr('id', "slippymap-chart-combine");
+	}
+	function tabSelected$1() {
+	  var checkMap = function checkMap(i) {
+	    if (data[i - 1].fields && (!data[i - 1].fields.gr || !data[i - 1].fields.taxon)) {
+	      d3__namespace.select("#slippymap-message-".concat(i)).html("\n          For the slippy map, you must configure both the <i>Taxon</i> and <i>Grid ref</i> columns.\n        ");
+	      d3__namespace.select("#slippymap-message-".concat(i)).style('display', '');
+	    } else {
+	      d3__namespace.select("#slippymap-message-".concat(i)).style('display', 'none');
+
+	      if (!maps[i - 1] && data[i - 1].json && data[i - 1].fields) {
+	        // Create brc-atlas map object
+	        maps[i - 1] = window.brcatlas.leafletMap({
+	          selector: "#slippymap-container-".concat(i),
+	          mapid: "slippymap".concat(i),
+	          mapTypesSel: {
+	            hectad: genHecatdMap
+	          },
+	          mapTypesKey: 'hectad'
+	        }); // Reset map width to 100%
+
+	        d3__namespace.select("#slippymap".concat(i)).style('width', '100%'); // Create taxon selection list
+
+	        populateTaxonSelectionControl(i, 'slippymap');
+	      }
+
+	      d3__namespace.select("#slippymap-div-".concat(i)).style("display", maps[i - 1] ? "" : "none");
+	      d3__namespace.select("#slippymap-name-".concat(i)).text(data[i - 1].name);
+	    }
+	  };
+
+	  checkMap(1);
+	  checkMap(2);
+	  refreshMaps();
+	}
+	function dataCleared$1(i) {
+	  clear$1(i);
+	}
+	function fieldConfigCleared$1(i) {
+	  clear$1(i);
+	} // Exported from the library to use from html interface
+
+	function mapslippyMap(i) {
+	  var taxon = d3__namespace.select("#slippymap-taxon-".concat(i)).property('value');
+	  maps[i - 1].setIdentfier({
+	    i: i,
+	    taxon: taxon
+	  });
+	  maps[i - 1].redrawMap();
+	}
+	function clear$1(i) {
+	  maps[i - 1] = null;
+	  d3__namespace.select("#slippymap-container-".concat(i)).html('');
+	}
+	function mapslippyClearMap(i, input) {
+	  input.value = '';
+	  maps[i - 1].clearMap();
+	}
+	function mapslippyDisplay() {
+	  // Function responsible for display one or both charts
+	  dChecked$1[0] = d3__namespace.select('#slippymap-check-1').property("checked");
+	  dChecked$1[1] = d3__namespace.select('#slippymap-check-2').property("checked");
+	  dChecked$1[2] = d3__namespace.select("#slippymap-check-combine").property('checked');
+
+	  if (dChecked$1[2] && dChecked$1[0] && dChecked$1[1]) {
+	    d3__namespace.select('#slippymap-div-combine').style("display", "");
+	    d3__namespace.select('#slippymap-div-1').style("display", "none");
+	    d3__namespace.select('#slippymap-div-2').style("display", "none");
+	  } else {
+	    d3__namespace.select('#slippymap-div-combine').style("display", "none");
+
+	    if (dChecked$1[0] && dChecked$1[1]) {
+	      d3__namespace.select('#slippymap-div-1').classed("splitx", true);
+	      d3__namespace.select('#slippymap-div-2').classed("splitx", true);
+	    } else {
+	      d3__namespace.select('#slippymap-div-1').classed("splitx", false);
+	      d3__namespace.select('#slippymap-div-2').classed("splitx", false);
+	    }
+
+	    if (dChecked$1[0]) {
+	      d3__namespace.select('#slippymap-div-1').style("display", "");
+	    } else {
+	      d3__namespace.select('#slippymap-div-1').style("display", "none");
+	    }
+
+	    if (dChecked$1[1]) {
+	      d3__namespace.select('#slippymap-div-2').style("display", "");
+	    } else {
+	      d3__namespace.select('#slippymap-div-2').style("display", "none");
+	    }
+	  } //displayData()
+
+
+	  refreshMaps();
+	}
+	function mapslippySetHeight() {
+	  maps.forEach(function (m, i) {
+	    if (m) {
+	      var height = Number(d3__namespace.select('#input-slippymap-height').property('value'));
+
+	      if (!height) {
+	        height = 500;
+	      }
+
+	      var bounds = document.getElementById("slippymap".concat(i + 1)).getBoundingClientRect();
+	      var width = bounds.width;
+	      m.setSize(width, height);
+	      d3__namespace.select("#slippymap".concat(i)).style('width', '100%');
+	    }
+	  });
 	} // Helper functions
 
 	function genHecatdMap(props) {
@@ -11120,16 +11322,34 @@
 	  });
 	}
 
-	var mapoverview = /*#__PURE__*/Object.freeze({
+	function refreshMaps() {
+	  // let width, height
+	  // if (maps[0]) {
+	  //   const bounds = document.getElementById('slippymap1').getBoundingClientRect()
+	  //   width = bounds.width
+	  //   height = bounds.height
+	  // }
+	  // if (maps[0] && maps[1]) {
+	  //    maps[1].setSize(width, height)
+	  // }
+	  maps.forEach(function (m) {
+	    if (m) {
+	      m.invalidateSize();
+	    }
+	  });
+	}
+
+	var mapslippy = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		gui: gui$1,
 		tabSelected: tabSelected$1,
 		dataCleared: dataCleared$1,
 		fieldConfigCleared: fieldConfigCleared$1,
-		mapoverviewMap: mapoverviewMap,
+		mapslippyMap: mapslippyMap,
 		clear: clear$1,
-		mapoverviewClearMap: mapoverviewClearMap,
-		mapoverviewDisplay: mapoverviewDisplay
+		mapslippyClearMap: mapslippyClearMap,
+		mapslippyDisplay: mapslippyDisplay,
+		mapslippySetHeight: mapslippySetHeight
 	});
 
 	var timeData = [null, null, null];
@@ -11228,11 +11448,11 @@
 	    d3__namespace.select('#timeseries-div-combine').style("display", "none");
 
 	    if (dChecked[0] && dChecked[1]) {
-	      d3__namespace.select('#timeseries-div-1').classed("split", true);
-	      d3__namespace.select('#timeseries-div-2').classed("split", true);
+	      d3__namespace.select('#timeseries-div-1').classed("splitx", true);
+	      d3__namespace.select('#timeseries-div-2').classed("splitx", true);
 	    } else {
-	      d3__namespace.select('#timeseries-div-1').classed("split", false);
-	      d3__namespace.select('#timeseries-div-2').classed("split", false);
+	      d3__namespace.select('#timeseries-div-1').classed("splitx", false);
+	      d3__namespace.select('#timeseries-div-2').classed("splitx", false);
 	    }
 
 	    if (dChecked[0]) {
@@ -11546,10 +11766,6 @@
 	  caption: 'Summary',
 	  fns: summary$1
 	}, {
-	  id: 'mapoverview',
-	  caption: 'Overview map',
-	  fns: mapoverview
-	}, {
 	  id: 'phenology',
 	  caption: 'Phenology',
 	  fns: phenology
@@ -11557,6 +11773,14 @@
 	  id: 'timeseries',
 	  caption: 'Time series',
 	  fns: timeseries
+	}, {
+	  id: 'mapoverview',
+	  caption: 'Overview map',
+	  fns: mapoverview
+	}, {
+	  id: 'mapslippy',
+	  caption: 'Explore map',
+	  fns: mapslippy
 	}];
 	var configFields = [{
 	  id: 'taxon',
@@ -11591,6 +11815,7 @@
 	  input.attr('max', max);
 	  input.attr('id', id);
 	  input.style('margin', '0 1em');
+	  input.style('width', '80px');
 	  input.attr('onchange', "".concat(fn, "()"));
 	}
 	function datasetCheckboxes(sel, prefix, fn, combineButton) {
@@ -11805,6 +12030,10 @@
 	exports.mapoverviewClearMap = mapoverviewClearMap;
 	exports.mapoverviewDisplay = mapoverviewDisplay;
 	exports.mapoverviewMap = mapoverviewMap;
+	exports.mapslippyClearMap = mapslippyClearMap;
+	exports.mapslippyDisplay = mapslippyDisplay;
+	exports.mapslippyMap = mapslippyMap;
+	exports.mapslippySetHeight = mapslippySetHeight;
 	exports.openPage = openPage;
 	exports.phenologyDisplay = phenologyDisplay;
 	exports.redoSummaries = redoSummaries;

@@ -4,6 +4,7 @@ import * as load from './load'
 import * as summary from './summary'
 import * as phenology from './phenology'
 import * as mapoverview from './mapoverview'
+import * as mapslippy from './mapslippy'
 import * as timeseries from './timeseries'
 
 const dateFormats = [
@@ -45,11 +46,6 @@ export const tabs = [
     fns: summary,
   },
   {
-    id: 'mapoverview',
-    caption: 'Overview map',
-    fns: mapoverview,
-  },
-  {
     id: 'phenology',
     caption: 'Phenology',
     fns: phenology
@@ -58,6 +54,16 @@ export const tabs = [
     id: 'timeseries',
     caption: 'Time series',
     fns: timeseries
+  },
+  {
+    id: 'mapoverview',
+    caption: 'Overview map',
+    fns: mapoverview,
+  },
+  {
+    id: 'mapslippy',
+    caption: 'Explore map',
+    fns: mapslippy,
   },
 ]
 
@@ -104,6 +110,7 @@ export function numberInput(fldset, id, label, min, max, fn) {
   input.attr('max', max)
   input.attr('id', id)
   input.style('margin', '0 1em')
+  input.style('width', '80px')
   input.attr('onchange', `${fn}()`)
 }
 
