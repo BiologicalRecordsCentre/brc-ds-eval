@@ -33,8 +33,8 @@ export function gui(sel) {
   gen.radioButtonSet(fldset, 'rad-timeseries-count-type', 'rad-timeseries-count', 'brcdseval.timeseriesDisplay', radios)
 
   // Year input
-  gen.numberInput(fldset, 'input-timeseries-minyear', 'Min year', 1980, 2021, 'brcdseval.timeseriesDisplay')
-  gen.numberInput(fldset, 'input-timeseries-maxyear', 'Max year', 1980, 2021, 'brcdseval.timeseriesDisplay')
+  gen.numberInput(fldset, 'input-timeseries-minyear', 'Min year', 1980, 2021, null, 'brcdseval.timeseriesDisplay')
+  gen.numberInput(fldset, 'input-timeseries-maxyear', 'Max year', 1980, 2021, null, 'brcdseval.timeseriesDisplay')
 
   function tableDiv(i, initDisplay) {
     const tabDiv = div.append('div')

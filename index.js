@@ -4,7 +4,7 @@ import { summaryDisplay, redoSummaries  } from './src/summary'
 import { phenologyDisplay } from './src/phenology'
 import { timeseriesDisplay } from './src/timeseries'
 import { mapoverviewDisplay, mapoverviewMap, mapoverviewClearMap } from './src/mapoverview'
-import { mapslippyDisplay, mapslippyMap, mapslippyClearMap, mapslippySetHeight } from './src/mapslippy'
+import { mapslippyDisplay, mapslippyMap, mapslippyClearMap, mapslippySetHeight, mapslippyBasemapOpacity } from './src/mapslippy'
 import pkg from './package.json'
 
 // Output version from package json to console
@@ -26,6 +26,7 @@ export {
   mapslippyMap,
   mapslippyClearMap,
   mapslippySetHeight,
+  mapslippyBasemapOpacity,
   phenologyDisplay,
   timeseriesDisplay
 } 

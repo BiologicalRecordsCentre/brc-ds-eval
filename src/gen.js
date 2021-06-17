@@ -102,14 +102,46 @@ export const configFields = [
   },
 ]
 
-export function numberInput(fldset, id, label, min, max, fn) {
-  const input = fldset.append('input')
-  input.attr('type', 'number')
+export function dropDown(fldset, id, label, values, value, fn) {
+  const input = fldset.append('select')
+  input.style('margin', '0 1em')
+  input.attr('id', id)
   input.attr('placeholder', label)
+  values.forEach(v => {
+    const opt = input.append('option')
+    opt.attr('value', v).text(v)
+    if (v === value) {
+      opt.property('selected', true)
+    }
+  })
+  input.attr('onchange', `${fn}()`)
+}
+
+export function numberInput(fldset, id, label, min, max, val, fn, slider) {
+
+  const ctl = fldset.append('div')
+  ctl.style('margin', '0 0.5em')
+  ctl.style('display', 'inline-block')
+
+  if (slider) {
+    const lab = ctl.append('label').text(label)
+    lab.attr('for', id)
+    lab.text(label)
+    lab.style('margin-right', '0.5em')
+  }
+
+  const input = ctl.append('input')
+  if (slider) {
+    input.attr('type', 'range')
+    input.classed('slider', true)
+  } else {
+    input.attr('type', 'number')
+    input.attr('placeholder', label)
+  }
   input.attr('min', min)
   input.attr('max', max)
+  input.attr('value', val)
   input.attr('id', id)
-  input.style('margin', '0 1em')
   input.style('width', '80px')
   input.attr('onchange', `${fn}()`)
 }
@@ -159,14 +191,30 @@ export function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, b
 }
 
 export function populateTaxonSelectionControl(i, prefix) {
-  const tf = data[i-1].fields.taxon
-  const taxa = []
-  data[i-1].json.forEach(r => {
-    if (taxa.indexOf(r[tf]) === -1) {
-      taxa.push(r[tf])
+
+  const getTaxa = (i) => {
+    const taxa = []
+    if (data[i-1] && data[i-1].fields && data[i-1].fields.taxon && data[i-1].json) {
+      const tf = data[i-1].fields.taxon
+      data[i-1].json.forEach(r => {
+        if (taxa.indexOf(r[tf]) === -1) {
+          taxa.push(r[tf])
+        }
+      })
     }
-  })
-  taxa.sort().forEach(t => {
+    return taxa
+  }
+
+  let tc
+  if (i === 3){
+    const t1 = getTaxa(1)
+    const t2 = getTaxa(2)
+    tc = [...new Set(t1, t2)]
+  } else {
+    tc = getTaxa(i)
+  }
+  
+  tc.sort().forEach(t => {
     d3.select(`#${prefix}-datalist-${i}`).append('option').text(t)
   })
 }
