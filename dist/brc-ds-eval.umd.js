@@ -11220,9 +11220,15 @@
             selector: "#slippymap-container-".concat(i),
             mapid: "slippymap".concat(i),
             mapTypesSel: {
-              visit: atlasMap
+              atlas: atlasMap
             },
-            mapTypesKey: 'visit'
+            mapTypesKey: 'atlas',
+            //legendOptlegendOpts: {display: true}
+            legendOpts: {
+              display: i === 3 ? true : false,
+              scale: 0.8,
+              x: 10
+            }
           }); // Synchronise panning/zooming
 
           maps[i - 1].lmap.on('zoomend', function () {
@@ -11360,38 +11366,68 @@
   }
 
   function atlasMap(identifier) {
+    console.log('atlasmap', identifier);
+
+    var isCached = function isCached(i, taxon, precision) {
+      return data[i - 1] && data[i - 1].atlas && data[i - 1].atlas[taxon] && data[i - 1].atlas[taxon]["p".concat(precision)];
+    };
+
+    var getCached = function getCached(i, taxon, precision) {
+      if (isCached(i, taxon, precision)) {
+        return data[i - 1].atlas[taxon]["p".concat(precision)];
+      }
+    };
+
+    var setCache = function setCache(i, taxon, precision, data$1) {
+      if (!data[i - 1]) data[i - 1] = {}; // Can be the case for combined data (i=3)
+
+      if (!data[i - 1].atlas) data[i - 1].atlas = {};
+      if (!data[i - 1].atlas[taxon]) data[i - 1].atlas[taxon] = {};
+      data[i - 1].atlas[taxon]["p".concat(precision)] = data$1;
+    };
+
     var getData = function getData(i, taxon, precision) {
+      //console.log('rawdata', gen.data[i-1])
       console.log(i, taxon, precision);
       var fgr = data[i - 1].fields.gr;
       var ft = data[i - 1].fields.taxon;
-      var data$1 = [];
-      data[i - 1].json.forEach(function (r) {
-        var grcheck;
+      var data$1;
 
-        try {
-          grcheck = checkGr(r[fgr]);
-        } catch (err) {
-          grcheck = null;
-        }
+      if (isCached(i, taxon, precision)) {
+        data$1 = getCached(i, taxon, precision);
+      } else {
+        // Generate data
+        data$1 = [];
+        data[i - 1].json.forEach(function (r) {
+          var grcheck;
 
-        if (grcheck && grcheck.precision <= precision) {
-          var gr = getLowerResGrs(r[fgr])["p".concat(precision)]; // For quadrants and array is returned
-
-          if (precision === 5000) {
-            if (gr.length === 1) {
-              gr = gr[0];
-            } else {
-              gr = null;
-            }
+          try {
+            grcheck = checkGr(r[fgr]);
+          } catch (err) {
+            grcheck = null;
           }
 
-          if (gr && r[ft] === taxon) {
-            if (data$1.indexOf(gr) === -1) {
-              data$1.push(gr);
+          if (grcheck && grcheck.precision <= precision) {
+            var gr = getLowerResGrs(r[fgr])["p".concat(precision)]; // For quadrants and array is returned
+
+            if (precision === 5000) {
+              if (gr.length === 1) {
+                gr = gr[0];
+              } else {
+                gr = null;
+              }
+            }
+
+            if (gr && r[ft] === taxon) {
+              if (data$1.indexOf(gr) === -1) {
+                data$1.push(gr);
+              }
             }
           }
-        }
-      });
+        });
+        setCache(i, taxon, precision, data$1);
+      }
+
       return data$1;
     };
 
@@ -11420,27 +11456,83 @@
         console.log('No precision!!!!!!!!!!!!');
     }
 
-    var visits;
+    var atlas;
 
     if (i === 3) {
-      visits = []; //v1 = 
+      if (isCached(3, taxon, precision)) {
+        atlas = getCached(3, taxon, precision);
+      } else {
+        var d1 = getData(1, taxon, precision);
+        var d2 = getData(2, taxon, precision); // Merge the two datasets, mapping grs to objects that
+        // indicate both gr and dataset occurrence (colour)
+
+        atlas = d1.map(function (gr) {
+          return {
+            gr: gr,
+            colour: 'blue'
+          };
+        });
+        d2.forEach(function (gr) {
+          var match = atlas.find(function (e) {
+            return e.gr === gr;
+          });
+
+          if (match) {
+            match.colour = 'red';
+          } else {
+            atlas.push({
+              gr: gr,
+              colour: 'yellow'
+            });
+          }
+        });
+        setCache(i, taxon, precision, atlas);
+        console.log(atlas);
+      }
     } else {
-      visits = getData(i, taxon, precision);
+      atlas = getData(i, taxon, precision);
     }
 
-    var data$1 = visits.map(function (gr) {
-      return {
-        gr: gr,
-        colour: 'blue'
+    var data$1, legend;
+
+    if (i < 3) {
+      data$1 = atlas.map(function (gr) {
+        return {
+          gr: gr,
+          colour: 'blue'
+        };
+      });
+      legend = {};
+    } else {
+      data$1 = atlas;
+      legend = {
+        title: 'Dataset presence',
+        size: 1,
+        shape: 'square',
+        precision: precision,
+        opacity: 0.8,
+        lines: [{
+          colour: 'blue',
+          text: data[0].name
+        }, {
+          colour: 'yellow',
+          text: data[1].name
+        }, {
+          colour: 'red',
+          text: 'Both datasets'
+        }]
       };
-    });
+    }
+
+    console.log('legend', legend);
     return new Promise(function (resolve) {
       resolve({
         records: data$1,
         precision: precision,
         shape: 'square',
         opacity: 0.8,
-        size: 1
+        size: 1,
+        legend: legend
       });
     });
   }

@@ -98,8 +98,14 @@ export function tabSelected() {
         maps[i-1] = window.brcatlas.leafletMap({
           selector: `#slippymap-container-${i}`,
           mapid: `slippymap${i}`,
-          mapTypesSel: {visit: atlasMap},
-          mapTypesKey: 'visit'
+          mapTypesSel: {atlas: atlasMap},
+          mapTypesKey: 'atlas',
+          //legendOptlegendOpts: {display: true}
+          legendOpts: {
+            display: i===3 ? true : false,
+            scale: 0.8,
+            x: 10
+          }
         })
 
         // Synchronise panning/zooming
@@ -241,40 +247,66 @@ function clear(i) {
 
 function atlasMap(identifier) {
 
+  console.log('atlasmap', identifier)
+
+  const isCached = (i, taxon, precision) => {
+    return gen.data[i-1] && gen.data[i-1].atlas && gen.data[i-1].atlas[taxon] && gen.data[i-1].atlas[taxon][`p${precision}`]
+  }
+  const getCached = (i, taxon, precision) => {
+    if (isCached(i, taxon, precision)) {
+      return gen.data[i-1].atlas[taxon][`p${precision}`]
+    }
+  }
+  const setCache = (i, taxon, precision, data) => {
+    if (!gen.data[i-1]) gen.data[i-1]={} // Can be the case for combined data (i=3)
+    if (!gen.data[i-1].atlas) gen.data[i-1].atlas={}
+    if (!gen.data[i-1].atlas[taxon]) gen.data[i-1].atlas[taxon]={}
+    gen.data[i-1].atlas[taxon][`p${precision}`] = data
+  }
+
   const getData = (i, taxon, precision) => {
 
+    //console.log('rawdata', gen.data[i-1])
     console.log(i, taxon, precision)
+
     const fgr = gen.data[i-1].fields.gr
     const ft = gen.data[i-1].fields.taxon
 
-    let data = []
-    gen.data[i-1].json.forEach(r => {
-      let grcheck
-      try {
-        grcheck = checkGr(r[fgr])
-      }
-      catch(err) {
-        grcheck = null
-      }
-      if (grcheck && grcheck.precision <= precision) {
-        let gr = getLowerResGrs(r[fgr])[`p${precision}`]
+    let data
+    if (isCached(i, taxon, precision)) {
+      data = getCached(i, taxon, precision)
+    } else {
+      // Generate data
+      data = []
+      gen.data[i-1].json.forEach(r => {
+        let grcheck
+        try {
+          grcheck = checkGr(r[fgr])
+        }
+        catch(err) {
+          grcheck = null
+        }
+        if (grcheck && grcheck.precision <= precision) {
+          let gr = getLowerResGrs(r[fgr])[`p${precision}`]
 
-        // For quadrants and array is returned
-        if (precision === 5000){
-          if (gr.length === 1) {
-            gr = gr[0]
-          } else {
-            gr = null
+          // For quadrants and array is returned
+          if (precision === 5000){
+            if (gr.length === 1) {
+              gr = gr[0]
+            } else {
+              gr = null
+            }
+          }
+
+          if (gr && r[ft] === taxon) {
+            if (data.indexOf(gr) === -1) {
+              data.push(gr)
+            }
           }
         }
-
-        if (gr && r[ft] === taxon) {
-          if (data.indexOf(gr) === -1) {
-            data.push(gr)
-          }
-        }
-      }
-    })
+      })
+      setCache(i, taxon, precision, data)
+    }
     return data
   }
  
@@ -298,25 +330,72 @@ function atlasMap(identifier) {
       console.log('No precision!!!!!!!!!!!!')
   }
 
-  let visits
+  let atlas
   if (i===3) {
-    visits = []
-    //v1 = 
+    if (isCached(3, taxon, precision)) {
+      atlas = getCached(3, taxon, precision)
+    } else {
+      const d1 = getData(1, taxon, precision)
+      const d2 = getData(2, taxon, precision)
+      // Merge the two datasets, mapping grs to objects that
+      // indicate both gr and dataset occurrence (colour)
+      atlas = d1.map(gr => {return {gr: gr, colour: 'blue'}})
+      d2.forEach(gr => {
+        const match = atlas.find(e => e.gr === gr)
+        if (match){
+          match.colour = 'red'
+        } else {
+          atlas.push({gr: gr, colour: 'yellow'})
+        }
+      })
+      setCache(i, taxon, precision, atlas)
+
+      console.log(atlas)
+    }
   } else {
-    visits = getData(i, taxon, precision)
+    atlas = getData(i, taxon, precision)
   }
 
-  const data = visits.map(gr => {
-    return {gr: gr, colour: 'blue'}
-  })
-
+  let data, legend
+  if (i < 3) {
+    data = atlas.map(gr => {
+      return {gr: gr, colour: 'blue'}
+    })
+    legend = {}
+  } else {
+    data = atlas
+    legend = {
+      title: 'Dataset presence',
+      size: 1,
+      shape: 'square',
+      precision: precision,
+      opacity: 0.8,
+      lines:[
+        {
+          colour: 'blue',
+          text: gen.data[0].name,
+        },
+        {
+          colour: 'yellow',
+          text: gen.data[1].name,
+        },
+        {
+          colour: 'red',
+          text: 'Both datasets',
+        },
+      ]
+    }
+  }
+ 
+  console.log('legend', legend)
   return new Promise((resolve) => {
     resolve({
       records: data,
       precision: precision,
       shape: 'square',
       opacity: 0.8,
-      size: 1
+      size: 1,
+      legend: legend
     })
   })
 }
