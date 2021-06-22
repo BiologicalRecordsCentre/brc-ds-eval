@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import * as gen from './gen'
 import { getLowerResGrs, checkGr } from 'brc-atlas-bigr'
+
 //import Split from 'split.js'
 
 //import bigr from 'brc-atlas-bigr'
@@ -77,6 +78,24 @@ export function tabSelected() {
     }
   }
   
+  const pointClicked = (gr, id, caption) => {
+
+    const ids = id.split('-')
+    const i = ids[0]
+    const row = ids[1]
+    const attrs = gen.data[i-1].json[row]
+    let html = ''
+    Object.keys(attrs).forEach(a => {
+      html = html ? `${html}</br>` : ''
+      html = `${html}<b>${a}</b>: ${attrs[a]}`
+    })
+    d3.select('#modalDialogContent').html(html)
+    d3.select('#modalDialog').style('display', 'block')
+    d3.select('.modal-close').on('click', () => {
+      d3.select('#modalDialog').style('display', 'none')
+    })
+  }
+
   const checkMap = (i) => {
     let msg
     if (i === 3) {
@@ -105,7 +124,8 @@ export function tabSelected() {
             display: i===3 ? true : false,
             scale: 0.8,
             x: 10
-          }
+          },
+          onclick: pointClicked
         })
 
         // Synchronise panning/zooming
@@ -117,8 +137,6 @@ export function tabSelected() {
 
         // Basemaps
         addBaseMaps(i)
-
-        // 
 
         // Reset map width to 100%
         d3.select(`#slippymap${i}`).style('width', '100%')
@@ -157,7 +175,6 @@ export function fieldConfigCleared(i) {
 export function mapslippyMap(i) {
 
   const mapType = d3.select('#input-slippymap-maptype').property('value')
-  console.log(mapType)
 
   const updateMap = (i) => {
     const taxon = d3.select(`#slippymap-taxon-${i}`).property('value')
@@ -278,7 +295,7 @@ function atlasMap(identifier) {
     } else {
       // Generate data
       data = []
-      gen.data[i-1].json.forEach(r => {
+      gen.data[i-1].json.forEach((r,row) => {
         let grcheck
         try {
           grcheck = checkGr(r[fgr])
@@ -286,8 +303,8 @@ function atlasMap(identifier) {
         catch(err) {
           grcheck = null
         }
-        if (grcheck && grcheck.precision <= precision) {
-          let gr = getLowerResGrs(r[fgr])[`p${precision}`]
+        if (grcheck && (grcheck.precision <= precision  || precision === 0)) {
+          let gr = precision === 0 ? r[fgr] : getLowerResGrs(r[fgr])[`p${precision}`]
 
           // For quadrants and array is returned
           if (precision === 5000){
@@ -297,10 +314,15 @@ function atlasMap(identifier) {
               gr = null
             }
           }
-
           if (gr && r[ft] === taxon) {
-            if (data.indexOf(gr) === -1) {
-              data.push(gr)
+            if (precision === 0) {
+              // No aggregating of point data
+              data.push({id: `${i}-${row}`, gr: gr})
+            } else {
+              //Altas data is aggregated
+              if (data.indexOf(gr) === -1) {
+                data.push(gr)
+              }
             }
           }
         }
@@ -327,7 +349,7 @@ function atlasMap(identifier) {
       precision=1000
       break
     default:
-      console.log('No precision!!!!!!!!!!!!')
+      precision=0
   }
 
   let atlas
@@ -337,30 +359,42 @@ function atlasMap(identifier) {
     } else {
       const d1 = getData(1, taxon, precision)
       const d2 = getData(2, taxon, precision)
-      // Merge the two datasets, mapping grs to objects that
-      // indicate both gr and dataset occurrence (colour)
-      atlas = d1.map(gr => {return {gr: gr, colour: 'blue'}})
-      d2.forEach(gr => {
-        const match = atlas.find(e => e.gr === gr)
-        if (match){
-          match.colour = 'red'
-        } else {
-          atlas.push({gr: gr, colour: 'yellow'})
-        }
-      })
+      if (precision === 0) {
+        atlas = [...d1.map(d => {return{gr: d.gr, id: d.id, colour: 'blue'}}), ...d2.map(d => {return{gr: d.gr, id: d.id, colour: 'red'}})]
+      } else {
+        // Merge the two datasets, mapping grs to objects that
+        // indicate both gr and dataset occurrence (colour)
+        atlas = d1.map(gr => {return {gr: gr, colour: 'blue'}})
+        d2.forEach(gr => {
+          const match = atlas.find(e => e.gr === gr)
+          if (match){
+            match.colour = 'gold'
+          } else {
+            atlas.push({gr: gr, colour: 'red'})
+          }
+        })
+      }
       setCache(i, taxon, precision, atlas)
-
       console.log(atlas)
     }
   } else {
     atlas = getData(i, taxon, precision)
   }
 
+  console.log('atlas', atlas)
+  console.log('i', i)
+
   let data, legend
   if (i < 3) {
-    data = atlas.map(gr => {
-      return {gr: gr, colour: 'blue'}
-    })
+    if (precision === 0) {
+      data = atlas.map(r => {
+        return {gr: r.gr, id: r.id, colour: 'blue'}
+      })
+    } else {
+      data = atlas.map(gr => {
+        return {gr: gr, colour: 'blue'}
+      })
+    }
     legend = {}
   } else {
     data = atlas
@@ -376,11 +410,11 @@ function atlasMap(identifier) {
           text: gen.data[0].name,
         },
         {
-          colour: 'yellow',
+          colour: 'red',
           text: gen.data[1].name,
         },
         {
-          colour: 'red',
+          colour: 'gold',
           text: 'Both datasets',
         },
       ]

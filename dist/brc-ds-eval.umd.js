@@ -11197,6 +11197,23 @@
       }
     };
 
+    var pointClicked = function pointClicked(gr, id, caption) {
+      var ids = id.split('-');
+      var i = ids[0];
+      var row = ids[1];
+      var attrs = data[i - 1].json[row];
+      var html = '';
+      Object.keys(attrs).forEach(function (a) {
+        html = html ? "".concat(html, "</br>") : '';
+        html = "".concat(html, "<b>").concat(a, "</b>: ").concat(attrs[a]);
+      });
+      d3__namespace.select('#modalDialogContent').html(html);
+      d3__namespace.select('#modalDialog').style('display', 'block');
+      d3__namespace.select('.modal-close').on('click', function () {
+        d3__namespace.select('#modalDialog').style('display', 'none');
+      });
+    };
+
     var checkMap = function checkMap(i) {
       var msg;
 
@@ -11228,7 +11245,8 @@
               display: i === 3 ? true : false,
               scale: 0.8,
               x: 10
-            }
+            },
+            onclick: pointClicked
           }); // Synchronise panning/zooming
 
           maps[i - 1].lmap.on('zoomend', function () {
@@ -11242,8 +11260,7 @@
             return mapslippyBasemapOpacity();
           }); // Basemaps
 
-          addBaseMaps(i); // 
-          // Reset map width to 100%
+          addBaseMaps(i); // Reset map width to 100%
 
           d3__namespace.select("#slippymap".concat(i)).style('width', '100%'); // Create taxon selection list
 
@@ -11275,7 +11292,6 @@
 
   function mapslippyMap(i) {
     var mapType = d3__namespace.select('#input-slippymap-maptype').property('value');
-    console.log(mapType);
 
     var updateMap = function updateMap(i) {
       var taxon = d3__namespace.select("#slippymap-taxon-".concat(i)).property('value');
@@ -11398,7 +11414,7 @@
       } else {
         // Generate data
         data$1 = [];
-        data[i - 1].json.forEach(function (r) {
+        data[i - 1].json.forEach(function (r, row) {
           var grcheck;
 
           try {
@@ -11407,8 +11423,8 @@
             grcheck = null;
           }
 
-          if (grcheck && grcheck.precision <= precision) {
-            var gr = getLowerResGrs(r[fgr])["p".concat(precision)]; // For quadrants and array is returned
+          if (grcheck && (grcheck.precision <= precision || precision === 0)) {
+            var gr = precision === 0 ? r[fgr] : getLowerResGrs(r[fgr])["p".concat(precision)]; // For quadrants and array is returned
 
             if (precision === 5000) {
               if (gr.length === 1) {
@@ -11419,8 +11435,17 @@
             }
 
             if (gr && r[ft] === taxon) {
-              if (data$1.indexOf(gr) === -1) {
-                data$1.push(gr);
+              if (precision === 0) {
+                // No aggregating of point data
+                data$1.push({
+                  id: "".concat(i, "-").concat(row),
+                  gr: gr
+                });
+              } else {
+                //Altas data is aggregated
+                if (data$1.indexOf(gr) === -1) {
+                  data$1.push(gr);
+                }
               }
             }
           }
@@ -11453,7 +11478,7 @@
         break;
 
       default:
-        console.log('No precision!!!!!!!!!!!!');
+        precision = 0;
     }
 
     var atlas;
@@ -11463,29 +11488,47 @@
         atlas = getCached(3, taxon, precision);
       } else {
         var d1 = getData(1, taxon, precision);
-        var d2 = getData(2, taxon, precision); // Merge the two datasets, mapping grs to objects that
-        // indicate both gr and dataset occurrence (colour)
+        var d2 = getData(2, taxon, precision);
 
-        atlas = d1.map(function (gr) {
-          return {
-            gr: gr,
-            colour: 'blue'
-          };
-        });
-        d2.forEach(function (gr) {
-          var match = atlas.find(function (e) {
-            return e.gr === gr;
-          });
-
-          if (match) {
-            match.colour = 'red';
-          } else {
-            atlas.push({
+        if (precision === 0) {
+          atlas = [].concat(_toConsumableArray(d1.map(function (d) {
+            return {
+              gr: d.gr,
+              id: d.id,
+              colour: 'blue'
+            };
+          })), _toConsumableArray(d2.map(function (d) {
+            return {
+              gr: d.gr,
+              id: d.id,
+              colour: 'red'
+            };
+          })));
+        } else {
+          // Merge the two datasets, mapping grs to objects that
+          // indicate both gr and dataset occurrence (colour)
+          atlas = d1.map(function (gr) {
+            return {
               gr: gr,
-              colour: 'yellow'
+              colour: 'blue'
+            };
+          });
+          d2.forEach(function (gr) {
+            var match = atlas.find(function (e) {
+              return e.gr === gr;
             });
-          }
-        });
+
+            if (match) {
+              match.colour = 'gold';
+            } else {
+              atlas.push({
+                gr: gr,
+                colour: 'red'
+              });
+            }
+          });
+        }
+
         setCache(i, taxon, precision, atlas);
         console.log(atlas);
       }
@@ -11493,15 +11536,28 @@
       atlas = getData(i, taxon, precision);
     }
 
+    console.log('atlas', atlas);
+    console.log('i', i);
     var data$1, legend;
 
     if (i < 3) {
-      data$1 = atlas.map(function (gr) {
-        return {
-          gr: gr,
-          colour: 'blue'
-        };
-      });
+      if (precision === 0) {
+        data$1 = atlas.map(function (r) {
+          return {
+            gr: r.gr,
+            id: r.id,
+            colour: 'blue'
+          };
+        });
+      } else {
+        data$1 = atlas.map(function (gr) {
+          return {
+            gr: gr,
+            colour: 'blue'
+          };
+        });
+      }
+
       legend = {};
     } else {
       data$1 = atlas;
@@ -11515,10 +11571,10 @@
           colour: 'blue',
           text: data[0].name
         }, {
-          colour: 'yellow',
+          colour: 'red',
           text: data[1].name
         }, {
-          colour: 'red',
+          colour: 'gold',
           text: 'Both datasets'
         }]
       };
@@ -11955,6 +12011,12 @@
     timeseriesDisplay: timeseriesDisplay
   });
 
+  window.onclick = function (event) {
+    if (event.target.id === 'modalDialog') {
+      d3__default['default'].select('#modalDialog').style('display', 'none');
+    }
+  };
+
   var dateFormats = [{
     re: /^\d\d\d\d.\d\d.\d\d$/,
     fnYear: function fnYear(date) {
@@ -12239,7 +12301,7 @@
   }
 
   var name = "brc-ds-eval";
-  var version = "0.2.0";
+  var version = "0.3.0";
   var description = "Javscript library for the BRC dataset evaluation tool.";
   var type = "module";
   var main = "dist/brc-ds-eval.umd.js";

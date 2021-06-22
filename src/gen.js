@@ -7,6 +7,14 @@ import * as mapoverview from './mapoverview'
 import * as mapslippy from './mapslippy'
 import * as timeseries from './timeseries'
 
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target.id === 'modalDialog') {
+    d3.select('#modalDialog').style('display', 'none')
+  }
+}
+
 const dateFormats = [
   {
     re: /^\d\d\d\d.\d\d.\d\d$/,

@@ -9,10 +9,16 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
 <script src="https://unpkg.com/split.js/dist/split.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-atlas@0.8.2/dist/brcatlas.umd.min.js"></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-atlas/dist/brcatlas.umd.min.css">
+<script src="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-atlas@0.9.1/dist/brcatlas.umd.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-atlas@0.9.1/dist/brcatlas.umd.min.css">
+<!-- <script src="http://127.0.0.1:8887/brc-atlas/dist/brcatlas.umd.js"></script>
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:8887/brc-atlas/dist/brcatlas.umd.css"> -->
 
 <script src="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-charts@latest/dist/brccharts.umd.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/biologicalrecordscentre/brc-charts@latest/dist/brccharts.umd.css"></script>
@@ -25,6 +31,16 @@
 </style>
 </head>
 <body>
+
+<!-- The Modal -->
+<div id="modalDialog" class="modal">
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <div id="modalDialogContent">Some text in the Modal..</div>
+  </div>
+</div>
+
 <h2>BRC dataset evaluation and comparison tool</h2>
 <p>
     If you haven't used this tool before, start on the '<i>Help</i>' tab.

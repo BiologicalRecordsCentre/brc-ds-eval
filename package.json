@@ -1,6 +1,6 @@
 {
   "name": "brc-ds-eval",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Javscript library for the BRC dataset evaluation tool.",
   "type": "module",
   "main": "dist/brc-ds-eval.umd.js",
