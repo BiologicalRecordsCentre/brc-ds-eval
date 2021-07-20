@@ -8,7 +8,10 @@ import { getLowerResGrs, checkGr } from 'brc-atlas-bigr'
 
 let maps = [null, null, null]
 const dChecked = [true, false, false]
+let mapDisplayed = [false, false, false]
+const taxa = ['', '', '']
 let movingMap = false
+const noTaxonText = 'No taxon displayed'
 
 // Standard interface functions
 export function gui(sel) {
@@ -23,14 +26,20 @@ export function gui(sel) {
   fldset.append('legend').text('Map options')
   fldset.style('margin-top', '0.5em')
 
+  // Combined taxon selector
+  gen.taxonSelectionControl(fldset, 'slippymap', 'brcdseval.mapslippyClearMap', 'brcdseval.mapslippyMap')
+
+  // Map type selector
+  gen.dropDown(fldset, 'input-slippymap-maptype', 'Set map type...', ['Hectad', 'Quadrant', 'Tetrad', 'Monad', 'Point'], 'Hectad', 'brcdseval.mapslippyMap')
+
   // Height input
   gen.numberInput(fldset, 'input-slippymap-height', 'Map height:', 300, 1200, 500, 'brcdseval.mapslippySetHeight', true)
 
   // Basemap fader
   gen.numberInput(fldset, 'input-slippymap-basemap-opacity', 'Base opacity:', 0, 100, 50, 'brcdseval.mapslippyBasemapOpacity', true)
 
-  // Map type selector
-  gen.dropDown(fldset, 'input-slippymap-maptype', 'Set map type...', ['Hectad', 'Quadrant', 'Tetrad', 'Monad', 'Point'], 'Hectad', 'brcdseval.mapslippyMap')
+
+  gen.checkbox(fldset, 'cluster-threshold', 'Reduce cluster at high zoom', 'brcdseval.mapslippyClusterChanged', false)
 
   // Layout for slippy maps
   const divMaps = d3.select(sel).append('div')
@@ -41,9 +50,8 @@ export function gui(sel) {
     const div = parent.append('div')
     div.attr('id', `slippymap-div-${i}`)
     div.append('h4').attr('id', `slippymap-name-${i}`)
-    const p = div.append('p')
-    gen.taxonSelectionControl(p, i, 'slippymap', 'brcdseval.mapslippyClearMap', 'brcdseval.mapslippyMap', 'Map')
     div.append('p').attr('id', `slippymap-message-${i}`)
+    div.append('p').attr('id', `slippymap-taxon-name-${i}`).text(noTaxonText)
     const container = div.append('div').attr('id', `slippymap-container-${i}`)
     container.style('border', '1px solid black')
   }
@@ -114,12 +122,14 @@ export function tabSelected() {
 
       if (!maps[i-1]) {
         // Create brc-atlas map object
+        const reduceCluster = d3.select('#cluster-threshold').property('checked')
         maps[i-1] = window.brcatlas.leafletMap({
           selector: `#slippymap-container-${i}`,
           mapid: `slippymap${i}`,
           mapTypesSel: {atlas: atlasMap},
           mapTypesKey: 'atlas',
           //legendOptlegendOpts: {display: true}
+          clusterZoomThreshold: reduceCluster ? 10 : 19,
           legendOpts: {
             display: i===3 ? true : false,
             scale: 0.8,
@@ -128,12 +138,12 @@ export function tabSelected() {
           onclick: pointClicked
         })
 
+        // Set opacity
+        mapslippyBasemapOpacity()
+
         // Synchronise panning/zooming
         maps[i-1].lmap.on('zoomend', () => moveMaps(i))
         maps[i-1].lmap.on('moveend', () => moveMaps(i))
-
-        // Add event handler to set basemap opacity
-        maps[i-1].lmap.on('layeradd', () => mapslippyBasemapOpacity())
 
         // Basemaps
         addBaseMaps(i)
@@ -142,18 +152,20 @@ export function tabSelected() {
         d3.select(`#slippymap${i}`).style('width', '100%')
 
         // Create taxon selection list
-        gen.populateTaxonSelectionControl(i, 'slippymap')
+        //gen.populateTaxonSelectionControl(i, 'slippymap')
       }
       d3.select(`#slippymap-div-${i}`).style("display", maps[i-1] ? "" : "none")
 
       if (i === 3) {
         d3.select(`#slippymap-name-${i}`).text('Combined display')
       } else {
-        d3.select(`#slippymap-name-${i}`).text(gen.data[i-1].name)
+        d3.select(`#slippymap-name-${i}`).text(`D${i}: ${gen.data[i-1].name}`)
       }
       
     }
   }
+  gen.populateTaxonSelectionControl('slippymap')
+
   checkMap(1)
   checkMap(2)
   checkMap(3)
@@ -172,45 +184,83 @@ export function fieldConfigCleared(i) {
 }
 
 // Exported from the library to use from html interface
-export function mapslippyMap(i) {
 
-  const mapType = d3.select('#input-slippymap-maptype').property('value')
+export function mapslippyMap(i) {
+  // If no argument set, then the function has been called from
+  // map type drop-down.
 
   const updateMap = (i) => {
-    const taxon = d3.select(`#slippymap-taxon-${i}`).property('value')
+
+    const taxon = taxa[i-1]
+    const mapType = d3.select('#input-slippymap-maptype').property('value')
+
+    // Taxon text
+    if (taxon) {
+      d3.select(`#slippymap-taxon-name-${i}`).text(`${taxon} - ${mapType}`)
+    } else {
+      d3.select(`#slippymap-taxon-name-${i}`).text(noTaxonText)  
+    }
+    // Map
     maps[i-1].setIdentfier({i: i, taxon: taxon, mapType: mapType})
     maps[i-1].redrawMap()
   }
 
   if (i) {
-    updateMap(i)
+    // Called from taxon selector.
+    let taxon = d3.select('#slippymap-taxon').property('value')
+    // Strip the ds suffix
+    if (taxon.endsWith('1,2')) {
+      taxon = taxon.substring(0, taxon.length-4)
+    } else {
+      taxon = taxon.substring(0, taxon.length-2)
+    }
+    
+    if (i === 3) {
+      // 'Both' button clicked
+      if (mapDisplayed[2]) {
+        console.log('update 3')        // Combined map
+        taxa[i-1] = taxon
+        updateMap(3)
+      } else {
+        // Separate maps
+        taxa[0] = taxon
+        if (mapDisplayed[0]) updateMap(1)
+        taxa[1] = taxon
+        if (mapDisplayed[1]) updateMap(2)
+      }
+    } else {
+      // D1 or D2 button clicked
+      taxa[i-1] = taxon
+      if (mapDisplayed[i-1]) updateMap(i)
+    }
   } else {
+    // Map type changed
     maps.forEach((m,i) => {
-      if(m) {
+      if(m && mapDisplayed[i]) {
         updateMap(i+1)
       }
     })
   }
 }
 
-export function mapslippyClearMap(i, input) {
+export function mapslippyClearMap(input) {
   input.value = ''
-  maps[i-1].clearMap()
+  //maps[i-1].clearMap()
 }
 
 export function mapslippyDisplay() {
 
-   // Function responsible for display one or both maps
+  // Function responsible for display one or both maps
   dChecked[0] = d3.select('#slippymap-check-1').property("checked")
   dChecked[1] = d3.select('#slippymap-check-2').property("checked")
   dChecked[2] = d3.select(`#slippymap-check-combine`).property('checked')
 
   if (dChecked[2] && dChecked[0] && dChecked[1]) {
-    d3.select('#slippymap-div-3').style("display", "")
-    d3.select('#slippymap-div-1').style("display", "none")
-    d3.select('#slippymap-div-2').style("display", "none")
+    mapDisplayed = [false, false, true]
   } else {
-    d3.select('#slippymap-div-3').style("display", "none")
+    mapDisplayed[0] = dChecked[0]
+    mapDisplayed[1] = dChecked[1]
+    mapDisplayed[2] = false
     if (dChecked[0] && dChecked[1]) {
       d3.select('#slippymap-div-1').classed("splitx", true)
       d3.select('#slippymap-div-2').classed("splitx", true)
@@ -218,18 +268,10 @@ export function mapslippyDisplay() {
       d3.select('#slippymap-div-1').classed("splitx", false)
       d3.select('#slippymap-div-2').classed("splitx", false)
     }
-    if (dChecked[0]) {
-      d3.select('#slippymap-div-1').style("display", "")
-    } else {
-      d3.select('#slippymap-div-1').style("display", "none")
-    }
-    if (dChecked[1]) {
-      d3.select('#slippymap-div-2').style("display", "")
-    } else {
-      d3.select('#slippymap-div-2').style("display", "none")
-    }
   }
-  //displayData()
+  for (let i=0; i<3; i++) {
+    d3.select(`#slippymap-div-${i+1}`).style("display",  mapDisplayed[i] ? '' : 'none')
+  }
 
   refreshMaps()
 }
@@ -252,7 +294,18 @@ export function mapslippySetHeight(){
 
 export function mapslippyBasemapOpacity() {
  const opacity = Number(d3.select('#input-slippymap-basemap-opacity').property('value'))
- d3.selectAll('.leaflet-tile-container').style('opacity', opacity/100)
+ d3.selectAll('.leaflet-tile-pane').style('opacity', opacity/100)
+}
+
+export function mapslippyClusterChanged() {
+
+  const reduceCluster = d3.select('#cluster-threshold').property('checked')
+  maps.forEach(m => {
+    if(m){
+      m.changeClusterThreshold(reduceCluster ? 10 : 19)
+    }
+  })
+  console.log('mapslippyClusterChanged')
 }
 
 // Helper functions
@@ -260,6 +313,9 @@ function clear(i) {
   maps[i-1] = null
   d3.select(`#slippymap-container-${i}`).html('')
   d3.select(`#slippymap-container-3`).html('')
+
+  d3.select(`#slippymap-taxon-name-${i}`).text(noTaxonText)
+  d3.select(`#slippymap-taxon-name-3`).html('')
 }
 
 function atlasMap(identifier) {

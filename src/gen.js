@@ -185,20 +185,37 @@ export function datasetCheckboxes(sel, prefix, fn, combineButton) {
   }
 }
 
-export function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, buttonCaption) {
+// export function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, buttonCaption) {
+//   const input = parent.append('input')
+//   input.attr('id', `${prefix}-taxon-${i}`)
+//   input.attr('list', `${prefix}-datalist-${i}`)
+//   input.attr('onfocus', `${onfocusFn}(${i}, this)`)
+//   input.attr('placeholder', 'Start typing taxon...')
+//   const datalist = parent.append('datalist')
+//   datalist.attr('id', `${prefix}-datalist-${i}`)
+//   datalist.attr('autocomplete', 'on')
+//   const button = parent.append('button').text(buttonCaption)
+//   button.attr('onclick', `${onclickFn}(${i})`)
+// }
+
+export function taxonSelectionControl(parent, prefix, onfocusFn, onclickFn) {
   const input = parent.append('input')
-  input.attr('id', `${prefix}-taxon-${i}`)
-  input.attr('list', `${prefix}-datalist-${i}`)
-  input.attr('onfocus', `${onfocusFn}(${i}, this)`)
+  input.attr('id', `${prefix}-taxon`)
+  input.attr('list', `${prefix}-datalist`)
+  input.attr('onfocus', `${onfocusFn}(this)`)
   input.attr('placeholder', 'Start typing taxon...')
   const datalist = parent.append('datalist')
-  datalist.attr('id', `${prefix}-datalist-${i}`)
+  datalist.attr('id', `${prefix}-datalist`)
   datalist.attr('autocomplete', 'on')
-  const button = parent.append('button').text(buttonCaption)
-  button.attr('onclick', `${onclickFn}(${i})`)
+  const b1 = parent.append('button').text('D1')
+  b1.attr('onclick', `${onclickFn}(1)`)
+  const b2 = parent.append('button').text('D2')
+  b2.attr('onclick', `${onclickFn}(2)`)
+  const b3 = parent.append('button').text('Both')
+  b3.attr('onclick', `${onclickFn}(3)`)
 }
 
-export function populateTaxonSelectionControl(i, prefix) {
+export function populateTaxonSelectionControl(prefix) {
 
   const getTaxa = (i) => {
     const taxa = []
@@ -213,19 +230,54 @@ export function populateTaxonSelectionControl(i, prefix) {
     return taxa
   }
 
-  let tc
-  if (i === 3){
-    const t1 = getTaxa(1)
-    const t2 = getTaxa(2)
-    tc = [...new Set(t1, t2)]
-  } else {
-    tc = getTaxa(i)
-  }
-  
+  const t1 = getTaxa(1)
+  const t2 = getTaxa(2)
+  const tc = [...new Set([...t1, ...t2])] //[...new Set(t1, t2)] gives emtpy array if t1 empty
+
+  // Clear the datalist if it already has options
+  d3.select(`#${prefix}-datalist`).html('')
+
+  // Create the taxon options
   tc.sort().forEach(t => {
-    d3.select(`#${prefix}-datalist-${i}`).append('option').text(t)
+    const ds=[]
+    if (t1.indexOf(t) > -1) {
+      ds.push('1')
+    }
+    if (t2.indexOf(t) > -1) {
+      ds.push('2')
+    }
+    d3.select(`#${prefix}-datalist`).append('option').text(`${t} ${ds.join(',')}`)
   })
 }
+
+// export function populateTaxonSelectionControl(i, prefix) {
+
+//   const getTaxa = (i) => {
+//     const taxa = []
+//     if (data[i-1] && data[i-1].fields && data[i-1].fields.taxon && data[i-1].json) {
+//       const tf = data[i-1].fields.taxon
+//       data[i-1].json.forEach(r => {
+//         if (taxa.indexOf(r[tf]) === -1) {
+//           taxa.push(r[tf])
+//         }
+//       })
+//     }
+//     return taxa
+//   }
+
+//   let tc
+//   if (i === 3){
+//     const t1 = getTaxa(1)
+//     const t2 = getTaxa(2)
+//     tc = [...new Set(t1, t2)]
+//   } else {
+//     tc = getTaxa(i)
+//   }
+  
+//   tc.sort().forEach(t => {
+//     d3.select(`#${prefix}-datalist-${i}`).append('option').text(t)
+//   })
+// }
 
 export function textInput(parent, id, placeholder, onclickFn, buttonCaption) {
   const divTs = parent.append('div')
@@ -236,6 +288,17 @@ export function textInput(parent, id, placeholder, onclickFn, buttonCaption) {
   const bTs = divTs.append('button')
   bTs.text(buttonCaption)
   bTs.attr('onclick', `${onclickFn}()`)
+}
+
+export function checkbox(parent, id, label, onchangeFn, checked) {
+  const input = parent.append('input')
+  input.attr('type', 'checkbox')
+  input.attr('id', id)
+  input.attr('onchange', `${onchangeFn}()`)
+  if (checked) {
+    input.property('checked', true)
+  }
+  parent.append('label').text(label)
 }
 
 export function radioButtonSet (parent, name, prefix, onclickFn, data) {

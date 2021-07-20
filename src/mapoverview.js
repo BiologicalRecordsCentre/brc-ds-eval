@@ -4,18 +4,24 @@ import { getLowerResGrs, checkGr } from 'brc-atlas-bigr'
 //import bigr from 'brc-atlas-bigr'
 
 let maps = [null, null]
+const noTaxonText = 'No taxon displayed'
 
 // Standard interface functions
 export function gui(sel) {
 
+  // Options for overvie map
+  const fldset = d3.select(sel).append('fieldset')
+  fldset.append('legend').text('Map options')
+  fldset.style('margin-top', '0.5em')
+   // Combined taxon selector
+  gen.taxonSelectionControl(fldset, 'overviewmap', 'brcdseval.mapoverviewClearMap', 'brcdseval.mapoverviewMap')
   function makeMapDiv(i) {
     const div = d3.select(sel).append('div')
     div.attr('id', `overviewmap-div-${i}`)
     div.classed('split2', true)
     div.append('h4').attr('id', `overviewmap-name-${i}`)
-    const p = div.append('p')
-    gen.taxonSelectionControl(p, i, 'overviewmap', 'brcdseval.mapoverviewClearMap', 'brcdseval.mapoverviewMap', 'Map')
     div.append('p').attr('id', `overviewmap-message-${i}`)
+    div.append('p').attr('id', `overviewmap-taxon-name-${i}`).text(noTaxonText)
     div.append('div').attr('id', `overviewmap-container-${i}`)
   }
   makeMapDiv(1)
@@ -47,10 +53,10 @@ export function tabSelected() {
           mapTypesKey: 'hectad'
         })
         // Create taxon selection list
-        gen.populateTaxonSelectionControl(i, 'overviewmap')
+        gen.populateTaxonSelectionControl('overviewmap')
       }
       d3.select(`#overviewmap-div-${i}`).style("display", maps[i-1] ? "" : "none")
-      d3.select(`#overviewmap-name-${i}`).text(gen.data[i-1].name)
+      d3.select(`#overviewmap-name-${i}`).text(`D${i}: ${gen.data[i-1].name}`)
     }
   }
   checkMap(1)
@@ -67,19 +73,43 @@ export function fieldConfigCleared(i) {
 
 // Exported from the library to use from html interface
 export function mapoverviewMap(i) {
-  const taxon = d3.select(`#overviewmap-taxon-${i}`).property('value')
-  maps[i-1].setIdentfier({i: i, taxon: taxon})
-  maps[i-1].redrawMap()
+  
+  let taxon = d3.select('#overviewmap-taxon').property('value')
+  // Strip the ds suffix
+  if (taxon.endsWith('1,2')) {
+    taxon = taxon.substring(0, taxon.length-4)
+  } else {
+    taxon = taxon.substring(0, taxon.length-2)
+  }
+
+  const updateMap = (i) => {
+    // Taxon text
+    if (taxon) {
+      d3.select(`#overviewmap-taxon-name-${i}`).text(taxon)
+    } else {
+      d3.select(`#overviewmap-taxon-name-${i}`).text(noTaxonText)  
+    }
+    maps[i-1].setIdentfier({i: i, taxon: taxon})
+    maps[i-1].redrawMap()
+  }
+ 
+  if (i === 3) {
+    if (maps[0]) updateMap(1)
+    if (maps[1]) updateMap(2)
+  } else {
+    if (maps[i-1]) updateMap(i)
+  }
 }
 
 export function clear(i) {
   maps[i-1] = null
   d3.select(`#overviewmap-container-${i}`).html('')
+  d3.select(`#overviewmap-taxon-name-${i}`).text(noTaxonText)
 }
 
-export function mapoverviewClearMap(i, input) {
+export function mapoverviewClearMap(input) {
   input.value = ''
-  maps[i-1].clearMap()
+  //maps[i-1].clearMap()
 }
 
 export function mapoverviewDisplay() {

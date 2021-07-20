@@ -9010,6 +9010,9 @@
     d3__namespace.select("#clearFieldConfig".concat(i)).property('disabled', true);
     d3__namespace.select("#configStatus".concat(i)).html('No config set');
     d3__namespace.select("#configStatus".concat(i)).style('color', 'red');
+    configFields.forEach(function (cf) {
+      return d3__namespace.select("#".concat(cf.id, "Info").concat(i)).text('');
+    });
   } // Exported from the library to use from html interface
 
   function fileOpened(event, i) {
@@ -10987,17 +10990,24 @@
     phenologyDisplay: phenologyDisplay
   });
 
-  var maps$1 = [null, null]; // Standard interface functions
+  var maps$1 = [null, null];
+  var noTaxonText$1 = 'No taxon displayed'; // Standard interface functions
 
   function gui$2(sel) {
+    // Options for overvie map
+    var fldset = d3__namespace.select(sel).append('fieldset');
+    fldset.append('legend').text('Map options');
+    fldset.style('margin-top', '0.5em'); // Combined taxon selector
+
+    taxonSelectionControl(fldset, 'overviewmap', 'brcdseval.mapoverviewClearMap', 'brcdseval.mapoverviewMap');
+
     function makeMapDiv(i) {
       var div = d3__namespace.select(sel).append('div');
       div.attr('id', "overviewmap-div-".concat(i));
       div.classed('split2', true);
       div.append('h4').attr('id', "overviewmap-name-".concat(i));
-      var p = div.append('p');
-      taxonSelectionControl(p, i, 'overviewmap', 'brcdseval.mapoverviewClearMap', 'brcdseval.mapoverviewMap', 'Map');
       div.append('p').attr('id', "overviewmap-message-".concat(i));
+      div.append('p').attr('id', "overviewmap-taxon-name-".concat(i)).text(noTaxonText$1);
       div.append('div').attr('id', "overviewmap-container-".concat(i));
     }
 
@@ -11026,11 +11036,11 @@
             mapTypesKey: 'hectad'
           }); // Create taxon selection list
 
-          populateTaxonSelectionControl(i, 'overviewmap');
+          populateTaxonSelectionControl('overviewmap');
         }
 
         d3__namespace.select("#overviewmap-div-".concat(i)).style("display", maps$1[i - 1] ? "" : "none");
-        d3__namespace.select("#overviewmap-name-".concat(i)).text(data[i - 1].name);
+        d3__namespace.select("#overviewmap-name-".concat(i)).text("D".concat(i, ": ").concat(data[i - 1].name));
       }
     };
 
@@ -11045,20 +11055,43 @@
   } // Exported from the library to use from html interface
 
   function mapoverviewMap(i) {
-    var taxon = d3__namespace.select("#overviewmap-taxon-".concat(i)).property('value');
-    maps$1[i - 1].setIdentfier({
-      i: i,
-      taxon: taxon
-    });
-    maps$1[i - 1].redrawMap();
+    var taxon = d3__namespace.select('#overviewmap-taxon').property('value'); // Strip the ds suffix
+
+    if (taxon.endsWith('1,2')) {
+      taxon = taxon.substring(0, taxon.length - 4);
+    } else {
+      taxon = taxon.substring(0, taxon.length - 2);
+    }
+
+    var updateMap = function updateMap(i) {
+      // Taxon text
+      if (taxon) {
+        d3__namespace.select("#overviewmap-taxon-name-".concat(i)).text(taxon);
+      } else {
+        d3__namespace.select("#overviewmap-taxon-name-".concat(i)).text(noTaxonText$1);
+      }
+
+      maps$1[i - 1].setIdentfier({
+        i: i,
+        taxon: taxon
+      });
+      maps$1[i - 1].redrawMap();
+    };
+
+    if (i === 3) {
+      if (maps$1[0]) updateMap(1);
+      if (maps$1[1]) updateMap(2);
+    } else {
+      if (maps$1[i - 1]) updateMap(i);
+    }
   }
   function clear$2(i) {
     maps$1[i - 1] = null;
     d3__namespace.select("#overviewmap-container-".concat(i)).html('');
+    d3__namespace.select("#overviewmap-taxon-name-".concat(i)).text(noTaxonText$1);
   }
-  function mapoverviewClearMap(i, input) {
-    input.value = '';
-    maps$1[i - 1].clearMap();
+  function mapoverviewClearMap(input) {
+    input.value = ''; //maps[i-1].clearMap()
   }
   function mapoverviewDisplay() {
     // Function responsible for display one or both maps
@@ -11136,7 +11169,10 @@
 
   var maps = [null, null, null];
   var dChecked$1 = [true, false, false];
-  var movingMap = false; // Standard interface functions
+  var mapDisplayed = [false, false, false];
+  var taxa = ['', '', ''];
+  var movingMap = false;
+  var noTaxonText = 'No taxon displayed'; // Standard interface functions
 
   function gui$1(sel) {
     datasetCheckboxes(sel, 'slippymap-check', 'mapslippyDisplay', true); // Layout for the slippy maps
@@ -11145,13 +11181,16 @@
 
     var fldset = div.append('fieldset');
     fldset.append('legend').text('Map options');
-    fldset.style('margin-top', '0.5em'); // Height input
+    fldset.style('margin-top', '0.5em'); // Combined taxon selector
+
+    taxonSelectionControl(fldset, 'slippymap', 'brcdseval.mapslippyClearMap', 'brcdseval.mapslippyMap'); // Map type selector
+
+    dropDown(fldset, 'input-slippymap-maptype', 'Set map type...', ['Hectad', 'Quadrant', 'Tetrad', 'Monad', 'Point'], 'Hectad', 'brcdseval.mapslippyMap'); // Height input
 
     numberInput(fldset, 'input-slippymap-height', 'Map height:', 300, 1200, 500, 'brcdseval.mapslippySetHeight', true); // Basemap fader
 
-    numberInput(fldset, 'input-slippymap-basemap-opacity', 'Base opacity:', 0, 100, 50, 'brcdseval.mapslippyBasemapOpacity', true); // Map type selector
-
-    dropDown(fldset, 'input-slippymap-maptype', 'Set map type...', ['Hectad', 'Quadrant', 'Tetrad', 'Monad', 'Point'], 'Hectad', 'brcdseval.mapslippyMap'); // Layout for slippy maps
+    numberInput(fldset, 'input-slippymap-basemap-opacity', 'Base opacity:', 0, 100, 50, 'brcdseval.mapslippyBasemapOpacity', true);
+    checkbox(fldset, 'cluster-threshold', 'Reduce cluster at high zoom', 'brcdseval.mapslippyClusterChanged', false); // Layout for slippy maps
 
     var divMaps = d3__namespace.select(sel).append('div');
     var divCombined = d3__namespace.select(sel).append('div');
@@ -11161,9 +11200,8 @@
       var div = parent.append('div');
       div.attr('id', "slippymap-div-".concat(i));
       div.append('h4').attr('id', "slippymap-name-".concat(i));
-      var p = div.append('p');
-      taxonSelectionControl(p, i, 'slippymap', 'brcdseval.mapslippyClearMap', 'brcdseval.mapslippyMap', 'Map');
       div.append('p').attr('id', "slippymap-message-".concat(i));
+      div.append('p').attr('id', "slippymap-taxon-name-".concat(i)).text(noTaxonText);
       var container = div.append('div').attr('id', "slippymap-container-".concat(i));
       container.style('border', '1px solid black');
     }
@@ -11233,6 +11271,7 @@
 
         if (!maps[i - 1]) {
           // Create brc-atlas map object
+          var reduceCluster = d3__namespace.select('#cluster-threshold').property('checked');
           maps[i - 1] = window.brcatlas.leafletMap({
             selector: "#slippymap-container-".concat(i),
             mapid: "slippymap".concat(i),
@@ -11241,30 +11280,28 @@
             },
             mapTypesKey: 'atlas',
             //legendOptlegendOpts: {display: true}
+            clusterZoomThreshold: reduceCluster ? 10 : 19,
             legendOpts: {
               display: i === 3 ? true : false,
               scale: 0.8,
               x: 10
             },
             onclick: pointClicked
-          }); // Synchronise panning/zooming
+          }); // Set opacity
+
+          mapslippyBasemapOpacity(); // Synchronise panning/zooming
 
           maps[i - 1].lmap.on('zoomend', function () {
             return moveMaps(i);
           });
           maps[i - 1].lmap.on('moveend', function () {
             return moveMaps(i);
-          }); // Add event handler to set basemap opacity
-
-          maps[i - 1].lmap.on('layeradd', function () {
-            return mapslippyBasemapOpacity();
           }); // Basemaps
 
           addBaseMaps(i); // Reset map width to 100%
 
           d3__namespace.select("#slippymap".concat(i)).style('width', '100%'); // Create taxon selection list
-
-          populateTaxonSelectionControl(i, 'slippymap');
+          //gen.populateTaxonSelectionControl(i, 'slippymap')
         }
 
         d3__namespace.select("#slippymap-div-".concat(i)).style("display", maps[i - 1] ? "" : "none");
@@ -11272,11 +11309,12 @@
         if (i === 3) {
           d3__namespace.select("#slippymap-name-".concat(i)).text('Combined display');
         } else {
-          d3__namespace.select("#slippymap-name-".concat(i)).text(data[i - 1].name);
+          d3__namespace.select("#slippymap-name-".concat(i)).text("D".concat(i, ": ").concat(data[i - 1].name));
         }
       }
     };
 
+    populateTaxonSelectionControl('slippymap');
     checkMap(1);
     checkMap(2);
     checkMap(3);
@@ -11291,10 +11329,19 @@
   } // Exported from the library to use from html interface
 
   function mapslippyMap(i) {
-    var mapType = d3__namespace.select('#input-slippymap-maptype').property('value');
-
+    // If no argument set, then the function has been called from
+    // map type drop-down.
     var updateMap = function updateMap(i) {
-      var taxon = d3__namespace.select("#slippymap-taxon-".concat(i)).property('value');
+      var taxon = taxa[i - 1];
+      var mapType = d3__namespace.select('#input-slippymap-maptype').property('value'); // Taxon text
+
+      if (taxon) {
+        d3__namespace.select("#slippymap-taxon-name-".concat(i)).text("".concat(taxon, " - ").concat(mapType));
+      } else {
+        d3__namespace.select("#slippymap-taxon-name-".concat(i)).text(noTaxonText);
+      } // Map
+
+
       maps[i - 1].setIdentfier({
         i: i,
         taxon: taxon,
@@ -11304,18 +11351,45 @@
     };
 
     if (i) {
-      updateMap(i);
+      // Called from taxon selector.
+      var taxon = d3__namespace.select('#slippymap-taxon').property('value'); // Strip the ds suffix
+
+      if (taxon.endsWith('1,2')) {
+        taxon = taxon.substring(0, taxon.length - 4);
+      } else {
+        taxon = taxon.substring(0, taxon.length - 2);
+      }
+
+      if (i === 3) {
+        // 'Both' button clicked
+        if (mapDisplayed[2]) {
+          console.log('update 3'); // Combined map
+
+          taxa[i - 1] = taxon;
+          updateMap(3);
+        } else {
+          // Separate maps
+          taxa[0] = taxon;
+          if (mapDisplayed[0]) updateMap(1);
+          taxa[1] = taxon;
+          if (mapDisplayed[1]) updateMap(2);
+        }
+      } else {
+        // D1 or D2 button clicked
+        taxa[i - 1] = taxon;
+        if (mapDisplayed[i - 1]) updateMap(i);
+      }
     } else {
+      // Map type changed
       maps.forEach(function (m, i) {
-        if (m) {
+        if (m && mapDisplayed[i]) {
           updateMap(i + 1);
         }
       });
     }
   }
-  function mapslippyClearMap(i, input) {
-    input.value = '';
-    maps[i - 1].clearMap();
+  function mapslippyClearMap(input) {
+    input.value = ''; //maps[i-1].clearMap()
   }
   function mapslippyDisplay() {
     // Function responsible for display one or both maps
@@ -11324,11 +11398,11 @@
     dChecked$1[2] = d3__namespace.select("#slippymap-check-combine").property('checked');
 
     if (dChecked$1[2] && dChecked$1[0] && dChecked$1[1]) {
-      d3__namespace.select('#slippymap-div-3').style("display", "");
-      d3__namespace.select('#slippymap-div-1').style("display", "none");
-      d3__namespace.select('#slippymap-div-2').style("display", "none");
+      mapDisplayed = [false, false, true];
     } else {
-      d3__namespace.select('#slippymap-div-3').style("display", "none");
+      mapDisplayed[0] = dChecked$1[0];
+      mapDisplayed[1] = dChecked$1[1];
+      mapDisplayed[2] = false;
 
       if (dChecked$1[0] && dChecked$1[1]) {
         d3__namespace.select('#slippymap-div-1').classed("splitx", true);
@@ -11337,20 +11411,11 @@
         d3__namespace.select('#slippymap-div-1').classed("splitx", false);
         d3__namespace.select('#slippymap-div-2').classed("splitx", false);
       }
+    }
 
-      if (dChecked$1[0]) {
-        d3__namespace.select('#slippymap-div-1').style("display", "");
-      } else {
-        d3__namespace.select('#slippymap-div-1').style("display", "none");
-      }
-
-      if (dChecked$1[1]) {
-        d3__namespace.select('#slippymap-div-2').style("display", "");
-      } else {
-        d3__namespace.select('#slippymap-div-2').style("display", "none");
-      }
-    } //displayData()
-
+    for (var i = 0; i < 3; i++) {
+      d3__namespace.select("#slippymap-div-".concat(i + 1)).style("display", mapDisplayed[i] ? '' : 'none');
+    }
 
     refreshMaps();
   }
@@ -11372,13 +11437,24 @@
   }
   function mapslippyBasemapOpacity() {
     var opacity = Number(d3__namespace.select('#input-slippymap-basemap-opacity').property('value'));
-    d3__namespace.selectAll('.leaflet-tile-container').style('opacity', opacity / 100);
+    d3__namespace.selectAll('.leaflet-tile-pane').style('opacity', opacity / 100);
+  }
+  function mapslippyClusterChanged() {
+    var reduceCluster = d3__namespace.select('#cluster-threshold').property('checked');
+    maps.forEach(function (m) {
+      if (m) {
+        m.changeClusterThreshold(reduceCluster ? 10 : 19);
+      }
+    });
+    console.log('mapslippyClusterChanged');
   } // Helper functions
 
   function clear$1(i) {
     maps[i - 1] = null;
     d3__namespace.select("#slippymap-container-".concat(i)).html('');
     d3__namespace.select("#slippymap-container-3").html('');
+    d3__namespace.select("#slippymap-taxon-name-".concat(i)).text(noTaxonText);
+    d3__namespace.select("#slippymap-taxon-name-3").html('');
   }
 
   function atlasMap(identifier) {
@@ -11629,7 +11705,8 @@
     mapslippyClearMap: mapslippyClearMap,
     mapslippyDisplay: mapslippyDisplay,
     mapslippySetHeight: mapslippySetHeight,
-    mapslippyBasemapOpacity: mapslippyBasemapOpacity
+    mapslippyBasemapOpacity: mapslippyBasemapOpacity,
+    mapslippyClusterChanged: mapslippyClusterChanged
   });
 
   var timeData = [null, null, null];
@@ -12167,20 +12244,36 @@
       input.attr('onclick', "brcdseval.".concat(fn, "()"));
       fldset.append('label').text("Combine display");
     }
-  }
-  function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, buttonCaption) {
+  } // export function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, buttonCaption) {
+  //   const input = parent.append('input')
+  //   input.attr('id', `${prefix}-taxon-${i}`)
+  //   input.attr('list', `${prefix}-datalist-${i}`)
+  //   input.attr('onfocus', `${onfocusFn}(${i}, this)`)
+  //   input.attr('placeholder', 'Start typing taxon...')
+  //   const datalist = parent.append('datalist')
+  //   datalist.attr('id', `${prefix}-datalist-${i}`)
+  //   datalist.attr('autocomplete', 'on')
+  //   const button = parent.append('button').text(buttonCaption)
+  //   button.attr('onclick', `${onclickFn}(${i})`)
+  // }
+
+  function taxonSelectionControl(parent, prefix, onfocusFn, onclickFn) {
     var input = parent.append('input');
-    input.attr('id', "".concat(prefix, "-taxon-").concat(i));
-    input.attr('list', "".concat(prefix, "-datalist-").concat(i));
-    input.attr('onfocus', "".concat(onfocusFn, "(").concat(i, ", this)"));
+    input.attr('id', "".concat(prefix, "-taxon"));
+    input.attr('list', "".concat(prefix, "-datalist"));
+    input.attr('onfocus', "".concat(onfocusFn, "(this)"));
     input.attr('placeholder', 'Start typing taxon...');
     var datalist = parent.append('datalist');
-    datalist.attr('id', "".concat(prefix, "-datalist-").concat(i));
+    datalist.attr('id', "".concat(prefix, "-datalist"));
     datalist.attr('autocomplete', 'on');
-    var button = parent.append('button').text(buttonCaption);
-    button.attr('onclick', "".concat(onclickFn, "(").concat(i, ")"));
+    var b1 = parent.append('button').text('D1');
+    b1.attr('onclick', "".concat(onclickFn, "(1)"));
+    var b2 = parent.append('button').text('D2');
+    b2.attr('onclick', "".concat(onclickFn, "(2)"));
+    var b3 = parent.append('button').text('Both');
+    b3.attr('onclick', "".concat(onclickFn, "(3)"));
   }
-  function populateTaxonSelectionControl(i, prefix) {
+  function populateTaxonSelectionControl(prefix) {
     var getTaxa = function getTaxa(i) {
       var taxa = [];
 
@@ -12196,20 +12289,54 @@
       return taxa;
     };
 
-    var tc;
+    var t1 = getTaxa(1);
+    var t2 = getTaxa(2);
 
-    if (i === 3) {
-      var t1 = getTaxa(1);
-      var t2 = getTaxa(2);
-      tc = _toConsumableArray(new Set(t1, t2));
-    } else {
-      tc = getTaxa(i);
-    }
+    var tc = _toConsumableArray(new Set([].concat(_toConsumableArray(t1), _toConsumableArray(t2)))); //[...new Set(t1, t2)] gives emtpy array if t1 empty
+    // Clear the datalist if it already has options
+
+
+    d3__default['default'].select("#".concat(prefix, "-datalist")).html(''); // Create the taxon options
 
     tc.sort().forEach(function (t) {
-      d3__default['default'].select("#".concat(prefix, "-datalist-").concat(i)).append('option').text(t);
+      var ds = [];
+
+      if (t1.indexOf(t) > -1) {
+        ds.push('1');
+      }
+
+      if (t2.indexOf(t) > -1) {
+        ds.push('2');
+      }
+
+      d3__default['default'].select("#".concat(prefix, "-datalist")).append('option').text("".concat(t, " ").concat(ds.join(',')));
     });
-  }
+  } // export function populateTaxonSelectionControl(i, prefix) {
+  //   const getTaxa = (i) => {
+  //     const taxa = []
+  //     if (data[i-1] && data[i-1].fields && data[i-1].fields.taxon && data[i-1].json) {
+  //       const tf = data[i-1].fields.taxon
+  //       data[i-1].json.forEach(r => {
+  //         if (taxa.indexOf(r[tf]) === -1) {
+  //           taxa.push(r[tf])
+  //         }
+  //       })
+  //     }
+  //     return taxa
+  //   }
+  //   let tc
+  //   if (i === 3){
+  //     const t1 = getTaxa(1)
+  //     const t2 = getTaxa(2)
+  //     tc = [...new Set(t1, t2)]
+  //   } else {
+  //     tc = getTaxa(i)
+  //   }
+  //   tc.sort().forEach(t => {
+  //     d3.select(`#${prefix}-datalist-${i}`).append('option').text(t)
+  //   })
+  // }
+
   function textInput(parent, id, placeholder, onclickFn, buttonCaption) {
     var divTs = parent.append('div');
     divTs.style('display', 'inline-block');
@@ -12219,6 +12346,18 @@
     var bTs = divTs.append('button');
     bTs.text(buttonCaption);
     bTs.attr('onclick', "".concat(onclickFn, "()"));
+  }
+  function checkbox(parent, id, label, onchangeFn, checked) {
+    var input = parent.append('input');
+    input.attr('type', 'checkbox');
+    input.attr('id', id);
+    input.attr('onchange', "".concat(onchangeFn, "()"));
+
+    if (checked) {
+      input.property('checked', true);
+    }
+
+    parent.append('label').text(label);
   }
   function radioButtonSet(parent, name, prefix, onclickFn, data) {
     // Proportions vs counts radio buttons
@@ -12369,6 +12508,7 @@
   exports.mapoverviewMap = mapoverviewMap;
   exports.mapslippyBasemapOpacity = mapslippyBasemapOpacity;
   exports.mapslippyClearMap = mapslippyClearMap;
+  exports.mapslippyClusterChanged = mapslippyClusterChanged;
   exports.mapslippyDisplay = mapslippyDisplay;
   exports.mapslippyMap = mapslippyMap;
   exports.mapslippySetHeight = mapslippySetHeight;

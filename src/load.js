@@ -102,6 +102,8 @@ export function fieldConfigCleared(i) {
   d3.select(`#clearFieldConfig${i}`).property('disabled', true)
   d3.select(`#configStatus${i}`).html('No config set')
   d3.select(`#configStatus${i}`).style('color', 'red')
+
+  gen.configFields.forEach(cf => d3.select(`#${cf.id}Info${i}`).text(''))
 }
 
 // Exported from the library to use from html interface
