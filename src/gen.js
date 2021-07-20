@@ -6,6 +6,7 @@ import * as phenology from './phenology'
 import * as mapoverview from './mapoverview'
 import * as mapslippy from './mapslippy'
 import * as timeseries from './timeseries'
+import * as visits from './visits'
 
 
 // When the user clicks anywhere outside of the modal, close it
@@ -19,6 +20,8 @@ const dateFormats = [
   {
     re: /^\d\d\d\d.\d\d.\d\d$/,
     fnYear: (date) => date.substr(0,4),
+    fnMonth: (date) => date.substr(5,2),
+    fnDay: (date) => date.substr(8,2),
     fnWeek: (date) => {
       const year = date.substr(0,4)
       const month = date.substr(5,2)
@@ -30,6 +33,8 @@ const dateFormats = [
   {
     re: /^\d\d.\d\d.\d\d\d\d$/,
     fnYear: (date) => date.substr(6,4),
+    fnMonth: (date) => date.substr(3,2),
+    fnDay: (date) => date.substr(0,2),
     fnWeek: (date) => {
       const year = date.substr(6,4)
       const month = date.substr(3,2)
@@ -72,6 +77,11 @@ export const tabs = [
     id: 'mapslippy',
     caption: 'Explore map',
     fns: mapslippy,
+  },
+  {
+    id: 'visits',
+    caption: 'Visit analyses',
+    fns: visits,
   },
 ]
 
@@ -185,19 +195,6 @@ export function datasetCheckboxes(sel, prefix, fn, combineButton) {
   }
 }
 
-// export function taxonSelectionControl(parent, i, prefix, onfocusFn, onclickFn, buttonCaption) {
-//   const input = parent.append('input')
-//   input.attr('id', `${prefix}-taxon-${i}`)
-//   input.attr('list', `${prefix}-datalist-${i}`)
-//   input.attr('onfocus', `${onfocusFn}(${i}, this)`)
-//   input.attr('placeholder', 'Start typing taxon...')
-//   const datalist = parent.append('datalist')
-//   datalist.attr('id', `${prefix}-datalist-${i}`)
-//   datalist.attr('autocomplete', 'on')
-//   const button = parent.append('button').text(buttonCaption)
-//   button.attr('onclick', `${onclickFn}(${i})`)
-// }
-
 export function taxonSelectionControl(parent, prefix, onfocusFn, onclickFn) {
   const input = parent.append('input')
   input.attr('id', `${prefix}-taxon`)
@@ -249,35 +246,6 @@ export function populateTaxonSelectionControl(prefix) {
     d3.select(`#${prefix}-datalist`).append('option').text(`${t} ${ds.join(',')}`)
   })
 }
-
-// export function populateTaxonSelectionControl(i, prefix) {
-
-//   const getTaxa = (i) => {
-//     const taxa = []
-//     if (data[i-1] && data[i-1].fields && data[i-1].fields.taxon && data[i-1].json) {
-//       const tf = data[i-1].fields.taxon
-//       data[i-1].json.forEach(r => {
-//         if (taxa.indexOf(r[tf]) === -1) {
-//           taxa.push(r[tf])
-//         }
-//       })
-//     }
-//     return taxa
-//   }
-
-//   let tc
-//   if (i === 3){
-//     const t1 = getTaxa(1)
-//     const t2 = getTaxa(2)
-//     tc = [...new Set(t1, t2)]
-//   } else {
-//     tc = getTaxa(i)
-//   }
-  
-//   tc.sort().forEach(t => {
-//     d3.select(`#${prefix}-datalist-${i}`).append('option').text(t)
-//   })
-// }
 
 export function textInput(parent, id, placeholder, onclickFn, buttonCaption) {
   const divTs = parent.append('div')
@@ -337,6 +305,24 @@ export function dateYear(date) {
   }
 }
 
+export function dateMonth(date) {
+  const df = dateFormats.find(df => df.re.test(date))
+  if (df) {
+    return df.fnMonth(date)
+  } else {
+    return null
+  }
+}
+
+export function dateDay(date) {
+  const df = dateFormats.find(df => df.re.test(date))
+  if (df) {
+    return df.fnDay(date)
+  } else {
+    return null
+  }
+}
+
 export function dateWeek(date) {
   const df = dateFormats.find(df => df.re.test(date))
   if (df) {
@@ -344,4 +330,8 @@ export function dateWeek(date) {
   } else {
     return null
   }
+}
+
+export function dateStandard(date) {
+  return `${dateYear(date)}-${dateMonth(date)}-${dateDay(date)}`
 }

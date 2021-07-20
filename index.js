@@ -5,6 +5,7 @@ import { phenologyDisplay } from './src/phenology'
 import { timeseriesDisplay } from './src/timeseries'
 import { mapoverviewDisplay, mapoverviewMap, mapoverviewClearMap } from './src/mapoverview'
 import { mapslippyDisplay, mapslippyMap, mapslippyClearMap, mapslippySetHeight, mapslippyBasemapOpacity, mapslippyClusterChanged } from './src/mapslippy'
+import { visitsDisplay } from './src/visits'
 import pkg from './package.json'
 
 // Output version from package json to console
@@ -30,4 +31,5 @@ export {
   mapslippyClusterChanged,
   phenologyDisplay,
   timeseriesDisplay,
+  visitsDisplay,
 } 
