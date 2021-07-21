@@ -12088,15 +12088,35 @@
     timeseriesDisplay: timeseriesDisplay
   });
 
-  var visitData = [null, null]; // Standard interface functions
+  var visitData = [null, null];
+  var combinedData = null;
+  var barWidth = 200;
+  var barHeight = 20; // Standard interface functions
 
   function gui(sel) {
+    d3__namespace.select(sel).append('h4').attr('id', "visits-name-1");
     d3__namespace.select(sel).append('p').attr('id', "visits-message-1");
+    d3__namespace.select(sel).append('h4').attr('id', "visits-name-2");
     d3__namespace.select(sel).append('p').attr('id', "visits-message-2");
+    var legend = d3__namespace.select(sel).append('p').attr('id', "visits-legend");
+    d3__namespace.select(sel).append('p').attr('id', "visits-table"); // Legend
+
+    var legendItems = [{
+      colour: 'red',
+      caption: 'Visits only in D1'
+    }, {
+      colour: 'gold',
+      caption: 'Visits in D1 & D2'
+    }, {
+      colour: 'blue',
+      caption: 'Visits only in D2'
+    }];
+    legendItems.forEach(function (li) {
+      legend.append('div').style('background-color', li.colour).style('display', 'inline-block').style('padding', '0.2em 0.4em').style('color', li.colour === 'gold' ? 'black' : 'white').style('font-weight', 'bold').style('font-size', '0.9em').text(li.caption);
+    });
+    legend.style('display', 'none');
   }
   function tabSelected() {
-    console.log('visits tab ');
-
     for (var i = 0; i < 2; i++) {
       // Warn if data selected but the necessary config is not set
       if (data[i] && data[i].fields) {
@@ -12106,7 +12126,12 @@
         } else {
           showMessage(i + 1, null);
         }
+
+        d3__namespace.select("#visits-name-".concat(i + 1)).text("D".concat(i + 1, ": ").concat(data[i].name));
+        d3__namespace.select("#visits-name-".concat(i + 1)).style('display', '');
       } else {
+        d3__namespace.select("#visits-name-".concat(i + 1)).text('');
+        d3__namespace.select("#visits-name-".concat(i + 1)).style('display', 'none');
         showMessage(i + 1, null);
       }
     }
@@ -12116,9 +12141,11 @@
   function dataCleared(i) {
     clear(i);
   }
-  function fieldConfigCleared(i) {} // Exported from the library to use from html interface
-
-  function visitsDisplay() {} // Helper functions
+  function fieldConfigCleared(i) {
+    clear(i);
+  } // Exported from the library to use from html interface
+  // None
+  // Helper functions
 
   function showMessage(i, html) {
     if (html) {
@@ -12131,7 +12158,6 @@
   }
 
   function displayData() {
-    console.log("Display visit stuff");
     var deferreds = [];
     var p1 = new Promise(function (resolve, reject) {
       deferreds.push({
@@ -12148,13 +12174,13 @@
     var pLoads = [p1, p2];
 
     var _loop = function _loop(i) {
-      var p = void 0; // Generate time visit data if not already exists and all the necessary config is set
+      var p = void 0; // Generate visit data if not already exists and all the necessary config is set
 
       if (data[i] && data[i].fields && data[i].fields.taxon && data[i].fields.date && data[i].fields.gr) {
         if (visitData[i]) {
-          //p = Promise.resolve()
           deferreds[i].resolve();
         } else {
+          combinedData = null;
           showMessage(i + 1, "<span style='color: orange; font-weight: bold'>Configuring dataset ".concat(i + 1, " for visit analysis...</span>"));
           setTimeout(function () {
             // Timeout required to allow GUI to update (i.e. tab to show)
@@ -12165,7 +12191,7 @@
           }, 1);
         }
       } else {
-        deferreds[i].resolve(); //p = Promise.resolve()
+        deferreds[i].resolve();
       }
 
       pLoads.push(p);
@@ -12176,11 +12202,60 @@
     }
 
     Promise.all(pLoads).then(function () {
-      console.log("all loaded");
+      if (!combinedData) {
+        combinedData = [];
 
-      if (visitData[0] && visitData[1]) {
-        makeChart();
+        var _loop2 = function _loop2(_i) {
+          if (visitData[_i]) {
+            visitData[_i].forEach(function (r) {
+              var cd = combinedData.find(function (c) {
+                return c.taxon === r.taxon;
+              });
+
+              if (cd) {
+                if (_i === 0) {
+                  cd.d1 = r.visits;
+                } else {
+                  cd.d2 = r.visits;
+                }
+              } else {
+                combinedData.push({
+                  taxon: r.taxon,
+                  d1: _i === 0 ? r.visits : [],
+                  d2: _i === 1 ? r.visits : []
+                });
+              }
+            });
+          }
+        };
+
+        for (var _i = 0; _i < 2; _i++) {
+          _loop2(_i);
+        }
+
+        var d1 = visitData[0];
+        var d2 = visitData[1];
+        var both = d1 && d2;
+        combinedData.forEach(function (cd) {
+          if (cd.d1 && cd.d2) {
+            var union = new Set([].concat(_toConsumableArray(cd.d1), _toConsumableArray(cd.d2)));
+            cd.union = both ? _toConsumableArray(union).length : null;
+            cd.intersect = both ? cd.d1.filter(function (v) {
+              return cd.d2.indexOf(v) > -1;
+            }).length : null;
+            cd.d1 = d1 ? cd.d1.length : null;
+            cd.d2 = d2 ? cd.d2.length : null;
+            cd.ud1 = cd.d1 && both ? Math.round(cd.union / cd.d1 * 10) / 10 : null;
+            cd.ud2 = cd.d2 && both ? Math.round(cd.union / cd.d2 * 10) / 10 : null;
+            var d1Prop = (cd.d1 - cd.intersect) / cd.union;
+            var d2Prop = (cd.d2 - cd.intersect) / cd.union;
+            var iProp = cd.intersect / cd.union;
+            cd.graphic = both ? "<div>\n            <div style=\"background-color:red; height:".concat(barHeight, "px; width:").concat(barWidth * d1Prop, "px; float:left\"></div>\n            <div style=\"background-color:gold; height:").concat(barHeight, "px; width:").concat(barWidth * iProp, "px; float:left\"></div>\n            <div style=\"background-color:blue; height:").concat(barHeight, "px; width:").concat(barWidth * d2Prop, "px; float:left\"></div>\n          </div>") : null;
+          }
+        });
       }
+
+      makeChart();
     });
   }
 
@@ -12242,11 +12317,55 @@
   }
 
   function clear(i) {
-    visitData[i - 1] = null; //d3.select(`#timeseries-chart-${i}`).html('')
+    visitData[i - 1] = null;
+    combinedData = null;
+    d3__namespace.select("#visits-table").html();
+    d3__namespace.select("#visits-table").style('display', 'none');
   }
 
   function makeChart() {
-    console.log(visitData);
+    if (visitData[0] && visitData[1]) {
+      d3__namespace.select('#visits-legend').style('display', '');
+    } else {
+      d3__namespace.select('#visits-legend').style('display', 'none');
+    }
+
+    if (combinedData.length) {
+      var cols = [{
+        title: "Taxon",
+        field: "taxon"
+      }, {
+        title: "D1",
+        field: "d1"
+      }, {
+        title: "D2",
+        field: "d2"
+      }, {
+        title: "Union",
+        field: "union"
+      }, {
+        title: "Intersect",
+        field: "intersect"
+      }, {
+        title: "Union/D1",
+        field: "ud1"
+      }, {
+        title: "Union/D2",
+        field: "ud2"
+      }, {
+        title: "Graphic",
+        field: "graphic",
+        formatter: "html",
+        minWidth: "".concat(Math.round(barWidth) * 1.1, "px"),
+        headerSort: false
+      }];
+      d3__namespace.select("#visits-table").style('display', '');
+      new Tabulator("#visits-table", {
+        height: 600,
+        data: combinedData,
+        columns: cols
+      });
+    }
   }
 
   var visits = /*#__PURE__*/Object.freeze({
@@ -12254,8 +12373,7 @@
     gui: gui,
     tabSelected: tabSelected,
     dataCleared: dataCleared,
-    fieldConfigCleared: fieldConfigCleared,
-    visitsDisplay: visitsDisplay
+    fieldConfigCleared: fieldConfigCleared
   });
 
   window.onclick = function (event) {
@@ -12692,7 +12810,6 @@
   exports.setFieldConfig = setFieldConfig;
   exports.summaryDisplay = summaryDisplay;
   exports.timeseriesDisplay = timeseriesDisplay;
-  exports.visitsDisplay = visitsDisplay;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
