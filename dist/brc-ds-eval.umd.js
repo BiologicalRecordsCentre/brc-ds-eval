@@ -12334,7 +12334,8 @@
     if (combinedData.length) {
       var cols = [{
         title: "Taxon",
-        field: "taxon"
+        field: "taxon",
+        headerFilter: "input"
       }, {
         title: "D1",
         field: "d1"

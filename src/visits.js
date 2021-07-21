@@ -238,7 +238,7 @@ function makeChart() {
   }
   if (combinedData.length) {
     const cols = [
-      {title: "Taxon", field: "taxon"},
+      {title: "Taxon", field: "taxon",  headerFilter:"input"},
       {title: "D1", field: "d1"},
       {title: "D2", field: "d2"},
       {title: "Union", field: "union"},
