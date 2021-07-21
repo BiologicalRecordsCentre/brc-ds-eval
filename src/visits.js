@@ -154,6 +154,7 @@ function displayData() {
           cd.d2 = d2 ? cd.d2.length : null
           cd.ud1 = cd.d1 && both ? Math.round(cd.union/cd.d1*10)/10 : null
           cd.ud2 = cd.d2 && both ? Math.round(cd.union/cd.d2*10)/10 : null
+          cd.iu = both ? Math.round(cd.intersect/cd.union*100)/100 : null
           const d1Prop = (cd.d1-cd.intersect)/cd.union
           const d2Prop = (cd.d2-cd.intersect)/cd.union
           const iProp = cd.intersect/cd.union
@@ -242,6 +243,7 @@ function makeChart() {
       {title: "D2", field: "d2"},
       {title: "Union", field: "union"},
       {title: "Intersect", field: "intersect"},
+      {title: "Intersect/Union", field: "iu"},
       {title: "Union/D1", field: "ud1"},
       {title: "Union/D2", field: "ud2"},
       {title: "Graphic", field: "graphic", formatter: "html", minWidth: `${Math.round(barWidth)*1.1}px`, headerSort:false},
