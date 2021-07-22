@@ -62,6 +62,12 @@ mapping drop-downs.
  - Verified status
  - Source
 
+Each drop-down contains a full list of the fields found in your CSV file. You
+have to select the field from the file that corresponds to the field
+concept. For example, your CSV may contain a field *SpeciesName* which indicates
+the taxon recorded and this should be selected from the field drop-down labelled 
+*Taxon*.
+
 Not all of these fields have to be mapped - it depends on which of the available
 tools you wish to use and, in some cases, now you want to use the tool. See the section on each tool to see which fields must be mapped.
 
@@ -105,6 +111,74 @@ values of the selected field.
 The *Download CSV* button can be used to download a CSV representation
 of the table you can see (two files are download if you are viewing
 two tables).
+
+### The Phenology tool
+The *Phenology tool* displays a thumbnail phenology chart for each of the taxa 
+in your file.
+
+This tool requires both the *Taxon* and *Date* fields to be mapped. (This
+is a temporal visualisation - there is no spatial element which is why
+grid reference is not required.)
+
+The *Display dataset* controls allow you show charts for one or both
+(if you have loaded two files), and optionally to display matching taxa
+in each of the files in the same chart (use the *Combine display*
+checkbox for that).
+
+By default the charts shows **weekly record counts**. However you can
+select the *Proportion of record counts* if you want to convert those 
+absolute weekly record counts to a figure that represents the proportion
+of the whole count, for that taxon, that the weekly figure represents.
+When you do this, you will see the figures on the y axis change, but 
+for charts displaying data from a single file, the shape of the phenology
+curve will not change. This is most useful when you are comparing two
+data from two different files in one chart (combined display). If the total
+number of records for a taxon differ widely between those two files, then
+it can be hard to compare the pehonology in a single chart if charting
+absolute numbers - switching to proportions can help in that case.
+
+In the *Phenology chart options* there is also a filter that allows you
+to filter the displayed thumbnail charts to just a subset of the taxa
+based on a some text which you type in (before clicking the *Apply* button).
+
+### Time series
+The *Time series tool* displays at thumbnail bar chart, for each taxon in
+your file, showing the number of records recorded each year.
+
+This tool requires both the *Taxon* and *Date* fields to be mapped. (This
+is a temporal visualisation - there is no spatial element which is why
+grid reference is not required.)
+
+The *Display dataset* controls allow you show charts for one or both
+(if you have loaded two files), and optionally to display matching taxa
+in each of the files in the same chart (use the *Combine display*
+checkbox for that).
+
+By default the charts shows **total yearly record counts**. However
+you can also switch from counts of records to counts of unqiue 'visits'.
+In the context of this tool a 'visit' is a unique combination of 1km square
+and date. So several records made on the same day within same 1km square will
+only count as a single visit - *even if their precise grid references are
+different*. This is an important concept in occupancy modelling, which is
+the reason it is inlcuded as an option in this tool.
+
+In the *Time series chart options* there is also a filter that allows you
+to filter the displayed thumbnail charts to just a subset of the taxa
+based on a some text which you type in (before clicking the *Apply* button).
+
+There are also a couple of filter boxes that let you limit the maximum and
+minimum years that are displayed on the x-axis of the charts. These options,
+particularly the *Min year* option is particularly useful because often
+in a dataset there are one or two very early records which can cause
+the x-axis of a chart like this to go back a long way - leaving vast
+bulk of the records squeezed into a small area on the right of the axis.
+To filter the records based on year, just enter a years in one or both
+of these boxes and hit the enter key on your keyboard.
+
+
+
+
+
 
 
 
