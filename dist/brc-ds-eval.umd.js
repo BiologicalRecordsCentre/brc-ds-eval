@@ -14382,8 +14382,16 @@
       t.fns.gui("#".concat(t.id)); // Get the readme file - which is the help file for the 
       // project - and display on the Help page.
 
-      console.log(window.location.origin);
-      fetch("".concat(window.location.origin, "/readme.md")).then(function (response) {
+      console.log('href', window.location);
+      var root;
+
+      if (window.location.pathname === '/index.html') {
+        root = window.location.href.substring(0, window.location.href.length - 10);
+      } else {
+        root = window.location.href;
+      }
+
+      fetch("".concat(root, "/README.md")).then(function (response) {
         return response.text();
       }).then(function (result) {
         return document.getElementById('markdown').innerHTML = lib.markdown.toHTML(result);

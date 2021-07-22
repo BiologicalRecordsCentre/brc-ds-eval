@@ -19,8 +19,14 @@ export function init() {
 
     // Get the readme file - which is the help file for the 
     // project - and display on the Help page.
-    console.log(window.location.origin)
-    fetch(`/README.md`) 
+    console.log('href', window.location)
+    let root
+    if (window.location.pathname ==='/index.html') {
+      root = window.location.href.substring(0, window.location.href.length - 10)
+    } else {
+      root = window.location.href
+    }
+    fetch(`${root}/README.md`) 
       .then(response => response.text())
       .then(result => document.getElementById('markdown').innerHTML = md.markdown.toHTML(result))
   })
