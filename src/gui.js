@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import * as gen from './gen'
-import * as md from 'markdown'
+import marked from 'marked'
 
 export function init() {
 
@@ -26,9 +26,10 @@ export function init() {
     } else {
       root = window.location.href
     }
+
     fetch(`${root}/README.md`) 
       .then(response => response.text())
-      .then(result => document.getElementById('markdown').innerHTML = md.markdown.toHTML(result))
+      .then(result => document.getElementById('markdown').innerHTML = marked(result))
   })
   // Initialise on help page
   openPage('help')
