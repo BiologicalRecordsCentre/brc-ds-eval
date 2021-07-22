@@ -26,16 +26,8 @@ d3.csv('./dist/designations.csv', function(d) {
 
 // Standard interface functions
 export function gui(sel) {
-  // Background downloading of resources
-  d3.select(sel).append('h3').text('Packaged resources')
-  d3.select(sel).append('p').text(`
-    These resources are packaged with the tool, you can carry on 
-    specifying your local CSV datasets whilst these are downloading.
-  `)
-  d3.select(sel).append('p').html('JNCC taxon designations (2020): <span id="jnccLoading">downloading...</span>')
-
   // Dataset load and field mapping
-  const d1 = d3.select(sel).append('div')
+  const d1 = d3.select(sel).append('div').style('overflow', 'auto')
 
   function splitDiv(i) {
     const d2 = d1.append('div')
@@ -85,6 +77,14 @@ export function gui(sel) {
   }
   splitDiv(1)
   splitDiv(2)
+
+  // Background downloading of resources
+  d3.select(sel).append('h3').text('Packaged resources')
+  d3.select(sel).append('p').text(`
+    These resources are packaged with the tool, you can carry on 
+    specifying your local CSV datasets whilst these are downloading.
+  `)
+  d3.select(sel).append('p').html('JNCC taxon designations (2020): <span id="jnccLoading">downloading...</span>')
 }
 
 export function tabSelected() {
