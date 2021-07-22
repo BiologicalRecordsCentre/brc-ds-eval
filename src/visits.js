@@ -7,9 +7,17 @@ const visitData = [null, null]
 let combinedData = null
 const barWidth = 200
 const barHeight = 20
+let tabulator = null
 
 // Standard interface functions
 export function gui(sel) {
+
+  // Options for overvie map
+  const fldset = d3.select(sel).append('fieldset')
+  fldset.append('legend').text('Visit analyses controls')
+  gen.button(fldset, 'brcdseval.visitsDownloadCSV', 'Download CSV')
+  fldset.style('margin-top', '0.5em')
+
   d3.select(sel).append('h4').attr('id', `visits-name-1`)
   d3.select(sel).append('p').attr('id', `visits-message-1`)
   d3.select(sel).append('h4').attr('id', `visits-name-2`)
@@ -19,9 +27,9 @@ export function gui(sel) {
 
   // Legend
   const legendItems=[
-    {colour: 'red', caption: 'Visits only in D1'}, 
+    {colour: 'blue', caption: 'Visits only in D1'}, 
     {colour: 'gold', caption: 'Visits in D1 & D2'}, 
-    {colour: 'blue', caption: 'Visits only in D2'}
+    {colour: 'red', caption: 'Visits only in D2'}
   ]
   legendItems.forEach(li => {
     legend.append('div')
@@ -71,6 +79,16 @@ export function fieldConfigCleared(i) {
 
 // Exported from the library to use from html interface
 // None
+
+export function visitsDownloadCSV() {
+  
+  if (tabulator) {
+    console.log('download')
+    tabulator.download("csv", "brc-ds-eval-visits.csv")
+  } else {
+    console.log('no tabulator')
+  }
+}
 
 // Helper functions
 
@@ -159,9 +177,9 @@ function displayData() {
           const d2Prop = (cd.d2-cd.intersect)/cd.union
           const iProp = cd.intersect/cd.union
           cd.graphic = both ? `<div>
-            <div style="background-color:red; height:${barHeight}px; width:${barWidth*d1Prop}px; float:left"></div>
+            <div style="background-color:blue; height:${barHeight}px; width:${barWidth*d1Prop}px; float:left"></div>
             <div style="background-color:gold; height:${barHeight}px; width:${barWidth*iProp}px; float:left"></div>
-            <div style="background-color:blue; height:${barHeight}px; width:${barWidth*d2Prop}px; float:left"></div>
+            <div style="background-color:red; height:${barHeight}px; width:${barWidth*d2Prop}px; float:left"></div>
           </div>` : null
         }
       })
@@ -171,7 +189,7 @@ function displayData() {
 }
 
 function loadData(i) {
-  visitData[i] = []
+  visitData[i] = [{taxon: 'All taxa', visits: []}]
   // Data generation is wrapped in a promise so that the interface will
   // not hang.
   return new Promise((resolve, reject) => {
@@ -218,6 +236,11 @@ function loadData(i) {
         }
       }
     })
+
+    for (let j=1; j<visitData[i].length; j++) {
+      visitData[i][0].visits = [...new Set([...visitData[i][0].visits, ...visitData[i][j].visits])]
+    }
+    
     resolve()
   })
 }
@@ -251,7 +274,7 @@ function makeChart() {
 
     d3.select(`#visits-table`).style('display', '')
 
-    new Tabulator(`#visits-table`, {
+    tabulator = new Tabulator(`#visits-table`, {
       height: 600,
       data: combinedData,
       columns: cols

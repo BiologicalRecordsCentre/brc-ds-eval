@@ -258,6 +258,12 @@ export function textInput(parent, id, placeholder, onclickFn, buttonCaption) {
   bTs.attr('onclick', `${onclickFn}()`)
 }
 
+export function button(parent, onclickFn, buttonCaption) {
+  const bTs = parent.append('button')
+  bTs.text(buttonCaption)
+  bTs.attr('onclick', `${onclickFn}()`)
+}
+
 export function checkbox(parent, id, label, onchangeFn, checked) {
   const input = parent.append('input')
   input.attr('type', 'checkbox')

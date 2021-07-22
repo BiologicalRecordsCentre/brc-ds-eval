@@ -10436,7 +10436,12 @@
 
     var p = d3__namespace.select(sel).append('p');
     var fldset = p.append('fieldset');
-    fldset.append('legend').text('Group records by');
+    fldset.append('legend').text('Group records by'); // Other controls
+
+    var p2 = d3__namespace.select(sel).append('p');
+    var fldset2 = p2.append('fieldset');
+    fldset2.append('legend').text('Other controls');
+    button(fldset2, 'brcdseval.summaryDownloadCSV', 'Download CSV');
 
     function makeInput(txt, value, checked) {
       var input = fldset.append('input');
@@ -10515,6 +10520,16 @@
 
     if (summary[0]) summary[0].redraw(true);
     if (summary[1]) summary[1].redraw(true);
+  }
+  function summaryDownloadCSV() {
+    var generate = function generate(i) {
+      if (summary[i - 1]) {
+        summary[i - 1].download("csv", "brc-ds-eval-summary-ds".concat(i, ".csv"));
+      }
+    };
+
+    generate(1);
+    generate(2);
   } // Helper functions
 
   function summarise(i) {
@@ -10662,7 +10677,8 @@
     dataCleared: dataCleared$5,
     fieldConfigCleared: fieldConfigCleared$5,
     redoSummaries: redoSummaries,
-    summaryDisplay: summaryDisplay
+    summaryDisplay: summaryDisplay,
+    summaryDownloadCSV: summaryDownloadCSV
   });
 
   var phenData = [null, null, null];
@@ -12091,9 +12107,15 @@
   var visitData = [null, null];
   var combinedData = null;
   var barWidth = 200;
-  var barHeight = 20; // Standard interface functions
+  var barHeight = 20;
+  var tabulator = null; // Standard interface functions
 
   function gui(sel) {
+    // Options for overvie map
+    var fldset = d3__namespace.select(sel).append('fieldset');
+    fldset.append('legend').text('Visit analyses controls');
+    button(fldset, 'brcdseval.visitsDownloadCSV', 'Download CSV');
+    fldset.style('margin-top', '0.5em');
     d3__namespace.select(sel).append('h4').attr('id', "visits-name-1");
     d3__namespace.select(sel).append('p').attr('id', "visits-message-1");
     d3__namespace.select(sel).append('h4').attr('id', "visits-name-2");
@@ -12102,13 +12124,13 @@
     d3__namespace.select(sel).append('p').attr('id', "visits-table"); // Legend
 
     var legendItems = [{
-      colour: 'red',
+      colour: 'blue',
       caption: 'Visits only in D1'
     }, {
       colour: 'gold',
       caption: 'Visits in D1 & D2'
     }, {
-      colour: 'blue',
+      colour: 'red',
       caption: 'Visits only in D2'
     }];
     legendItems.forEach(function (li) {
@@ -12145,7 +12167,15 @@
     clear(i);
   } // Exported from the library to use from html interface
   // None
-  // Helper functions
+
+  function visitsDownloadCSV() {
+    if (tabulator) {
+      console.log('download');
+      tabulator.download("csv", "brc-ds-eval-visits.csv");
+    } else {
+      console.log('no tabulator');
+    }
+  } // Helper functions
 
   function showMessage(i, html) {
     if (html) {
@@ -12251,7 +12281,7 @@
             var d1Prop = (cd.d1 - cd.intersect) / cd.union;
             var d2Prop = (cd.d2 - cd.intersect) / cd.union;
             var iProp = cd.intersect / cd.union;
-            cd.graphic = both ? "<div>\n            <div style=\"background-color:red; height:".concat(barHeight, "px; width:").concat(barWidth * d1Prop, "px; float:left\"></div>\n            <div style=\"background-color:gold; height:").concat(barHeight, "px; width:").concat(barWidth * iProp, "px; float:left\"></div>\n            <div style=\"background-color:blue; height:").concat(barHeight, "px; width:").concat(barWidth * d2Prop, "px; float:left\"></div>\n          </div>") : null;
+            cd.graphic = both ? "<div>\n            <div style=\"background-color:blue; height:".concat(barHeight, "px; width:").concat(barWidth * d1Prop, "px; float:left\"></div>\n            <div style=\"background-color:gold; height:").concat(barHeight, "px; width:").concat(barWidth * iProp, "px; float:left\"></div>\n            <div style=\"background-color:red; height:").concat(barHeight, "px; width:").concat(barWidth * d2Prop, "px; float:left\"></div>\n          </div>") : null;
           }
         });
       }
@@ -12261,7 +12291,10 @@
   }
 
   function loadData(i) {
-    visitData[i] = []; // Data generation is wrapped in a promise so that the interface will
+    visitData[i] = [{
+      taxon: 'All taxa',
+      visits: []
+    }]; // Data generation is wrapped in a promise so that the interface will
     // not hang.
 
     return new Promise(function (resolve, reject) {
@@ -12313,6 +12346,11 @@
           }
         }
       });
+
+      for (var j = 1; j < visitData[i].length; j++) {
+        visitData[i][0].visits = _toConsumableArray(new Set([].concat(_toConsumableArray(visitData[i][0].visits), _toConsumableArray(visitData[i][j].visits))));
+      }
+
       resolve();
     });
   }
@@ -12365,7 +12403,7 @@
         headerSort: false
       }];
       d3__namespace.select("#visits-table").style('display', '');
-      new Tabulator("#visits-table", {
+      tabulator = new Tabulator("#visits-table", {
         height: 600,
         data: combinedData,
         columns: cols
@@ -12378,7 +12416,8 @@
     gui: gui,
     tabSelected: tabSelected,
     dataCleared: dataCleared,
-    fieldConfigCleared: fieldConfigCleared
+    fieldConfigCleared: fieldConfigCleared,
+    visitsDownloadCSV: visitsDownloadCSV
   });
 
   window.onclick = function (event) {
@@ -12619,6 +12658,11 @@
     bTs.text(buttonCaption);
     bTs.attr('onclick', "".concat(onclickFn, "()"));
   }
+  function button(parent, onclickFn, buttonCaption) {
+    var bTs = parent.append('button');
+    bTs.text(buttonCaption);
+    bTs.attr('onclick', "".concat(onclickFn, "()"));
+  }
   function checkbox(parent, id, label, onchangeFn, checked) {
     var input = parent.append('input');
     input.attr('type', 'checkbox');
@@ -12814,7 +12858,9 @@
   exports.redoSummaries = redoSummaries;
   exports.setFieldConfig = setFieldConfig;
   exports.summaryDisplay = summaryDisplay;
+  exports.summaryDownloadCSV = summaryDownloadCSV;
   exports.timeseriesDisplay = timeseriesDisplay;
+  exports.visitsDownloadCSV = visitsDownloadCSV;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

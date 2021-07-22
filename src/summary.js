@@ -15,6 +15,12 @@ export function gui(sel) {
   const fldset = p.append('fieldset')
   fldset.append('legend').text('Group records by')
 
+  // Other controls
+  const p2 = d3.select(sel).append('p')
+  const fldset2 = p2.append('fieldset')
+  fldset2.append('legend').text('Other controls')
+  gen.button(fldset2, 'brcdseval.summaryDownloadCSV', 'Download CSV')
+
   function makeInput(txt, value, checked) {
     const input = fldset.append('input')
     input.attr('type', 'radio')
@@ -91,6 +97,16 @@ export function summaryDisplay() {
   }
   if (summary[0]) summary[0].redraw(true)
   if (summary[1]) summary[1].redraw(true)
+}
+
+export function summaryDownloadCSV() {
+  const generate = (i) => {
+    if (summary[i-1]) {
+      summary[i-1].download("csv", `brc-ds-eval-summary-ds${i}.csv`)
+    }
+  }
+  generate(1)
+  generate(2)
 }
 
 // Helper functions

@@ -1,10 +1,11 @@
 import { openPage, init } from './src/gui'
 import { fileOpened, setFieldConfig, clearFieldConfig } from './src/load'
-import { summaryDisplay, redoSummaries  } from './src/summary'
+import { summaryDisplay, redoSummaries, summaryDownloadCSV } from './src/summary'
 import { phenologyDisplay } from './src/phenology'
 import { timeseriesDisplay } from './src/timeseries'
 import { mapoverviewDisplay, mapoverviewMap, mapoverviewClearMap } from './src/mapoverview'
 import { mapslippyDisplay, mapslippyMap, mapslippyClearMap, mapslippySetHeight, mapslippyBasemapOpacity, mapslippyClusterChanged } from './src/mapslippy'
+import { visitsDownloadCSV } from './src/visits'
 import pkg from './package.json'
 
 // Output version from package json to console
@@ -18,6 +19,7 @@ export {
   setFieldConfig,
   clearFieldConfig,
   summaryDisplay,
+  summaryDownloadCSV,
   redoSummaries,
   mapoverviewDisplay,
   mapoverviewMap,
@@ -30,4 +32,5 @@ export {
   mapslippyClusterChanged,
   phenologyDisplay,
   timeseriesDisplay,
+  visitsDownloadCSV,
 } 
