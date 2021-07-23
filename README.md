@@ -18,11 +18,13 @@ understands, e.g. *Grid ref*, *Date* etc (see section on data loading), when
 you load the file. That way you don't have to create a version of your CSV file(s)
 specifically for this tool.
 
+Some visualisations or summaries require specific data to be meaningful. For example, Phenology plots require records across the year.
+
 #### Dates and grid references
 There are some restrictions on the type of spatial references and dates that 
 this tool can handle. Only grid references (British, Irish or Channel Islands)
-are handled - lat, lon is not handled. The tools do not support the use of
-vague dates or date ranges - they work with dates specified in either of these
+are handled - lat, lon is not handled. The tools that work with
+dates recognise dates with either of these
 two formats:
  - yyyy-mm-dd
  - dd-mm-yyyy
@@ -30,15 +32,17 @@ two formats:
 Note however that any delimeter can be used to separate the year, month and day
 parts, so long as it is only a single character.
 
+Records with vague dates or date ranges can be loaded within the tool but data with imprecise dates are not supported within visualisations that use dates (e.g. phenology plots).
+
 Records that have dates or grid references that the tool does not understand 
-are simply ignored (by tools where those fields are required). The *Load*
+are simply ignored (by the tools where those fields are required. The *Load*
 page will also give a summary of the number of 'invalid' dates and grid
 references found (see below).
 
 ### Loading your data
 Although this tool is deployed as a web page, all of the code runs entirely in your
 own browser. When you load data in the tool, it doesn't leave your own computer - it is
-*not* uploaded to a website. So your data is secure.
+*not* uploaded to a website.
 
 On the *Load* tab you can select one or two CSV files of biological records. Use the
 *Choose File* buttons to select the files. When you've selected a file and
@@ -69,7 +73,7 @@ the taxon recorded and this should be selected from the field drop-down labelled
 *Taxon*.
 
 Not all of these fields have to be mapped - it depends on which of the available
-tools you wish to use and, in some cases, now you want to use the tool. See the section on each tool to see which fields must be mapped.
+tools you wish to use and, in some cases, how you want to use the tool. See the section on each tool to see which fields must be mapped.
 
 Once you have mapped any required fields, you can click the *Set config* button.
 When you've done that, the text changes colour to blue and says
@@ -149,14 +153,14 @@ to filter the displayed thumbnail charts to just a subset of the taxa
 based on a some text which you type in (before clicking the *Apply* button).
 
 ### The Time Series tool
-The *Time series tool* displays at thumbnail bar chart, for each taxon in
+The *Time series tool* displays a thumbnail bar chart, for each taxon in
 your dataset, showing the number of records recorded each year.
 
 This tool requires both the *Taxon* and *Date* fields to be mapped. (This
 is a temporal visualisation - there is no spatial element which is why
 grid reference is not required.)
 
-The *Display dataset* controls allow you show charts for one or both
+The *Display dataset* controls allows you show charts for one or both
 (if you have loaded two datasets), and optionally to display matching taxa
 in each of the datasets in the same chart (use the *Combine display*
 checkbox for that).
@@ -168,7 +172,7 @@ see the eplanation and the end of the help.
 
 In the *Time series chart options* there is also a filter that allows you
 to filter the displayed thumbnail charts to just a subset of the taxa
-based on a some text which you type in (before clicking the *Apply* button).
+based on some text which you type in (before clicking the *Apply* button).
 
 There are also a couple of filter boxes that let you limit the maximum and
 minimum years that are displayed on the x-axis of the charts. These options,
@@ -242,7 +246,7 @@ avoid an unresponsive map where the datasets contain a lot of data, a clustering
 algorithm is used to combine records into groups. But as you zoom in the
 individual records are resolved. Clicking on a individual pin representing
 a single record pops up a modal dialog displaying all the attributes for
-that record from your original dataset. If you zoom right into a cluster of recrds
+that record from your original dataset. If you zoom right into a cluster of records
 which will not resolve to individual points, it is because several records
 are mapped at the same location. In this case, click on the cluster and it
 will 'spider' to show the individual records which can be selected in the
